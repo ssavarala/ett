@@ -100,7 +100,7 @@ public class Parsing {
  
         String patientId = null;
       //  Node security = JAXB.unmarshal(new StringReader(wsseHeader), Node.class);
-        Node securityDoc = MiscUtil.stringToDom((wsseHeader == null ? "" : wsseHeader);
+        Node securityDoc = MiscUtil.stringToDom(wsseHeader == null ? "" : wsseHeader);
         
         Node security = securityDoc.getFirstChild();        
         
