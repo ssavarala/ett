@@ -97,9 +97,10 @@ public class Parsing {
 
     public static String getPatientIDFromWsse(String mtom) throws IOException, MessagingException, SAXException, ParserConfigurationException {
         String wsseHeader = Parsing.getWsseHeaderFromMTOM(mtom);
+ 
         String patientId = null;
       //  Node security = JAXB.unmarshal(new StringReader(wsseHeader), Node.class);
-        Node securityDoc = MiscUtil.stringToDom(wsseHeader);
+        Node securityDoc = MiscUtil.stringToDom((wsseHeader == null ? "" : wsseHeader);
         
         Node security = securityDoc.getFirstChild();        
         
