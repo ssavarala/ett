@@ -92,7 +92,15 @@
 		"desc": "Verifies the ability of the receiving system to reject invalid STARTTLS commands.Hitting 'Run' will cause ETT to begin an invalid STARTTLS session. This session SHALL end before a message can be sent.",
 		"sutRole": "receiver",
 		"sutHisp": true,
-		"sutEdge": true
+		"sutEdge": true,
+		"fields": [{
+			"label": "Timeout in minutes",
+			"name": "sutCommandTimeoutInSeconds",
+			"datatype": "String",
+			"value": "sutCommandTimeoutInSeconds",
+			"readOnly": false,
+			"display": true
+		}]
 	}, {
 		"name": "SMTP MT Test 17 - Generate Unique Message-ID (Processed MDN suite)",
 		"id": 117,
@@ -511,9 +519,9 @@
 		"sutEdge": false,
 		"fields": [{
 			"label": "Timeout in minutes",
-			"name": "TimeoutInMinutes",
+			"name": "sutCommandTimeoutInSeconds",
 			"datatype": "String",
-			"value": "TimeoutInMinutes",
+			"value": "Timeout in minutes",
 			"readOnly": false,
 			"display": true
 		}]

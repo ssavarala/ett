@@ -51,11 +51,9 @@ public class SmtpTestInput {
 	
 	String ccdaFileLink
 	
-	TestResult previousResult;
+	TestResult previousResult
+
 	
-	String TimeoutInMinutes;
-	
-	byte[] cert;
 
 	public SmtpTestInput() {
 
@@ -65,7 +63,7 @@ public class SmtpTestInput {
 			String sutEmailAddress, String tttEmailAddress, String useTLS, String sutCommandTimeoutInSeconds,
 			String sutUserName, String sutPassword, String tttUserName, String tttPassword, String tttSmtpAddress,
 			String startTlsPort, String status, String attachmentType, String ccdaReferenceFilename,
-			String ccdaValidationObjective, String ccdaFileLink, TestResult previousTr, String TimeoutInMinutes, byte[] cert) {
+			String ccdaValidationObjective, String ccdaFileLink, TestResult previousTr,String TimeoutInMinutes) {
 		super();
 		this.testCaseNumber = testCaseNumber;
 		this.sutSmtpAddress = sutSmtpAddress;
@@ -87,8 +85,6 @@ public class SmtpTestInput {
 		this.ccdaValidationObjective = ccdaValidationObjective;
 		this.ccdaFileLink = ccdaFileLink;
 		this.previousTr = previousTr;
-		this.TimeoutInMinutes = TimeoutInMinutes;
-		this.cert = cert;
 	}
 
 	public SmtpTestInput(String testCaseNumber, String sutSmtpAddress,
@@ -125,9 +121,9 @@ public class SmtpTestInput {
 			this.sutCommandTimeoutInSeconds = "600"
 		}
 		
-		if (TimeoutInMinutes==null || TimeoutInMinutes.equals("0") || TimeoutInMinutes.equals("")) {
+		/*if (TimeoutInMinutes==null || TimeoutInMinutes.equals("0") || TimeoutInMinutes.equals("")) {
 			this.TimeoutInMinutes = "60"
-		}
+		}*/
 
 		this.sutUserName = setDefaultAuthValue(this.sutUserName)
 		this.sutPassword = setDefaultAuthValue(this.sutPassword)
@@ -173,7 +169,7 @@ public class SmtpTestInput {
 				this.tttEmailAddress, getBool(this.useTLS), this.sutUserName,
 				this.sutPassword, this.tttUserName, this.tttPassword,
 				Integer.parseInt(this.startTlsPort),
-				Integer.parseInt(this.sutCommandTimeoutInSeconds), attachment, this.ccdaReferenceFilename, this.ccdaValidationObjective,this.cert,Integer.parseInt(this.TimeoutInMinutes))
+				Integer.parseInt(this.sutCommandTimeoutInSeconds), attachment, this.ccdaReferenceFilename, this.ccdaValidationObjective)
 
 		res.setTr(this.previousResult)
 		

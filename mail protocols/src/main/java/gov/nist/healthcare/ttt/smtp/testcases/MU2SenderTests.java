@@ -1114,11 +1114,11 @@ public class MU2SenderTests {
 		Session session = Session.getInstance(props, null);
 
 		try {
-			Properties prop = new Properties();
+			/*Properties prop = new Properties();
 			String path = "./application.properties";
 			FileInputStream file = new FileInputStream(path);
 			prop.load(file);
-			file.close();
+			file.close();*/
 			  
 			String fromAddress = "";
 			if (ti.sutUserName.contains("@")){
@@ -1129,7 +1129,7 @@ public class MU2SenderTests {
 				fromAddress = ti.sutUserName + "@" + ti.sutSmtpAddress;;
 			}
 
-			System.out.println("TimeOUTTTTT---->" + ti.TimeoutInMinutes);
+			System.out.println("TimeOUTTTTT---->" + ti.sutCommandTimeoutInSeconds);
 			Message message = new MimeMessage(session);
 			message.setFrom(new InternetAddress(fromAddress));
 			message.setRecipients(Message.RecipientType.TO,
