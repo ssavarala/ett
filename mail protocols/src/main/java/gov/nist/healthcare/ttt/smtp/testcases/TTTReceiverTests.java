@@ -92,6 +92,7 @@ public class TTTReceiverTests {
 		HashMap<String, String> bodyparts = tr.getAttachments();
 		HashMap<String, JsonNode> validationResult = tr.getCCDAValidationReports();
 		String result1 = "";
+		boolean flag = false;
 		// int j = 0;
 		String host = "";
 		Properties props = new Properties();
@@ -113,117 +114,131 @@ public class TTTReceiverTests {
 			Folder inbox = store.getFolder("Inbox");
 			inbox.open(Folder.READ_WRITE);
 			host = prop.getProperty("ett.smtp.host");
-
+			String[] parts1 = ti.ccdaValidationObjective.split(" ");
+			String obj1 = parts1[0];
+			System.out.println("Objective" + obj1);
+			System.out.println("FileName" + ti.ccdaReferenceFilename);
 			Flags seen = new Flags(Flags.Flag.SEEN);
 			FlagTerm unseenFlagTerm = new FlagTerm(seen, false);
 			Message messages[] = inbox.search(unseenFlagTerm);
+			String str = ti.ccdaReferenceFilename;
+			if(str != null && !str.isEmpty()){
+				for (Message message : messages) {
+					try {
+						Address[] froms = message.getFrom();
+						String sender_ = froms == null ? ""
+								: ((InternetAddress) froms[0]).getAddress();
 
-			for (Message message : messages) {
-				try {
-					Address[] froms = message.getFrom();
-					String sender_ = froms == null ? ""
-							: ((InternetAddress) froms[0]).getAddress();
+						String sender = ti.sutEmailAddress;
+						if (sender_.equals(sender)) {
+							// j++;
+							// Store all the headers in a map
+							Enumeration headers = message.getAllHeaders();
+							while (headers.hasMoreElements()) {
+								Header h = (Header) headers.nextElement();
+								// result.put(h.getName() + " " + "[" + j +"]",
+								// h.getValue());
+								result.put("\n" + h.getName(), h.getValue() + "\n");
+							}
 
-					String sender = ti.sutEmailAddress;
-					if (sender_.equals(sender)) {
-						// j++;
-						// Store all the headers in a map
-						Enumeration headers = message.getAllHeaders();
-						while (headers.hasMoreElements()) {
-							Header h = (Header) headers.nextElement();
-							// result.put(h.getName() + " " + "[" + j +"]",
-							// h.getValue());
-							result.put("\n" + h.getName(), h.getValue() + "\n");
-						}
+							result.put("\n" + "Delivered-To", "********" + "\n");
 
-						result.put("\n" + "Delivered-To", "********" + "\n");
-
-						// Storing the Message Body Parts
-						if(message.getContent() instanceof Multipart){
-							Multipart multipart = (Multipart) message.getContent();
-							for (int i = 0; i < multipart.getCount(); i++) {
-								BodyPart bodyPart = multipart.getBodyPart(i);
-								InputStream stream = bodyPart.getInputStream();
-
-
-
-								byte[] targetArray = IOUtils.toByteArray(stream);
-								System.out.println(new String(targetArray));
-								int m = i + 1;
-								if (bodyPart.getFileName() != null) {
-									bodyparts.put(bodyPart.getFileName(), new String(
-											targetArray));
-
-									if ((bodyPart.getFileName().contains(".xml") || bodyPart.getFileName().contains(".XML"))){
-										// Query MDHT war endpoint
-										CloseableHttpClient client = HttpClients.createDefault();
-										FileUtils.writeByteArrayToFile(new File("sample.xml"), targetArray);
-										File file1 = new File("sample.xml");
-										HttpPost post = new HttpPost(prop.getProperty("ett.mdht.r2.url"));
-										FileBody fileBody = new FileBody(file1);
+							// Storing the Message Body Parts
+							if(message.getContent() instanceof Multipart){
+								Multipart multipart = (Multipart) message.getContent();
+								for (int i = 0; i < multipart.getCount(); i++) {
+									BodyPart bodyPart = multipart.getBodyPart(i);
+									InputStream stream = bodyPart.getInputStream();
 
 
-										//
-										MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-										builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-										//	builder.addTextBody("validationObjective", "170.315(b)(1)");
-										//	builder.addTextBody("referenceFileName", "CP_Sample1.pdf");
-										String[] parts = ti.ccdaValidationObjective.split(" ");
-										String obj = parts[0];
-										builder.addTextBody("validationObjective", obj);
-										builder.addTextBody("referenceFileName", ti.ccdaReferenceFilename);
-										builder.addPart("ccdaFile", fileBody);
-										HttpEntity entity = builder.build();
-										//
-										post.setEntity(entity);
+
+									byte[] targetArray = IOUtils.toByteArray(stream);
+									System.out.println(new String(targetArray));
+									int m = i + 1;
+									if (bodyPart.getFileName() != null) {
+										bodyparts.put(bodyPart.getFileName(), new String(
+												targetArray));
+
+										if ((bodyPart.getFileName().contains(".xml") || bodyPart.getFileName().contains(".XML"))){
+											// Query MDHT war endpoint
+											CloseableHttpClient client = HttpClients.createDefault();
+											FileUtils.writeByteArrayToFile(new File("sample.xml"), targetArray);
+											File file1 = new File("sample.xml");
+											HttpPost post = new HttpPost(prop.getProperty("ett.mdht.r2.url"));
+											FileBody fileBody = new FileBody(file1);
 
 
-										HttpResponse response = client.execute(post);
-										// CONVERT RESPONSE TO STRING
-										result1 = EntityUtils.toString(response.getEntity());
+											//
+											MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+											builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+											//	builder.addTextBody("validationObjective", "170.315(b)(1)");
+											//	builder.addTextBody("referenceFileName", "CP_Sample1.pdf");
+											String[] parts = ti.ccdaValidationObjective.split(" ");
+											String obj = parts[0];
+											builder.addTextBody("validationObjective", obj);
+											builder.addTextBody("referenceFileName", ti.ccdaReferenceFilename);
+											builder.addPart("ccdaFile", fileBody);
+											HttpEntity entity = builder.build();
+											//
+											post.setEntity(entity);
 
-										JSONObject json = new JSONObject(result1);
-										json.put("hasError", false);
-										// Check errors
-										JSONArray resultMetadata = json.getJSONObject("resultsMetaData").getJSONArray("resultMetaData");
-										for (int k = 0; k < resultMetadata.length(); k++) {
-											JSONObject metatada = resultMetadata.getJSONObject(k);
-											if(metatada.getString("type").toLowerCase().contains("error")) {
-												if(metatada.getInt("count") > 0) {
-													json.put("hasError", true);
+
+											HttpResponse response = client.execute(post);
+											// CONVERT RESPONSE TO STRING
+											result1 = EntityUtils.toString(response.getEntity());
+
+											JSONObject json = new JSONObject(result1);
+											json.put("hasError", false);
+											// Check errors
+											JSONArray resultMetadata = json.getJSONObject("resultsMetaData").getJSONArray("resultMetaData");
+											for (int k = 0; k < resultMetadata.length(); k++) {
+												JSONObject metatada = resultMetadata.getJSONObject(k);
+												if(metatada.getString("type").toLowerCase().contains("error")) {
+													if(metatada.getInt("count") > 0) {
+														json.put("hasError", true);
+													}
 												}
+
 											}
+											String newresult = json.toString();
 
+											ObjectMapper mapper = new ObjectMapper();
+											JsonNode jsonObject = mapper.readTree(newresult) ;
+											validationResult.put( bodyPart.getFileName() , jsonObject );
 										}
-										String newresult = json.toString();
 
-										ObjectMapper mapper = new ObjectMapper();
-										JsonNode jsonObject = mapper.readTree(newresult) ;
-										validationResult.put( bodyPart.getFileName() , jsonObject );
+									} else {
+										bodyparts.put("Message Content" + " " + m,
+												new String(targetArray));
 									}
 
-								} else {
-									bodyparts.put("Message Content" + " " + m,
-											new String(targetArray));
+
+
 								}
-
-
-
 							}
 						}
+						// inbox.setFlags(messages, new Flags(Flags.Flag.SEEN), true);
+					}catch (Exception e){
+						log.info("Error when fetching email " + e.getLocalizedMessage());
 					}
-					// inbox.setFlags(messages, new Flags(Flags.Flag.SEEN), true);
-				}catch (Exception e){
-					log.info("Error when fetching email " + e.getLocalizedMessage());
 				}
 			}
 
-			if (result.size() == 0) {
+			else{
+				flag = true;
+				System.out.println("Flag set to true");
+			}
+			 if(flag) {
 				tr.setCriteriamet(CriteriaStatus.FALSE);
-				tr.getTestRequestResponses()
-				.put("\nERROR",
-						"No messages found! Send a message and try again.\nPlease make sure that the Vendor Email Address is entered and matches the email address from which the email is being sent.\nWait for atleast 30 seconds after sending the email to ensure successful delivery to the ETT.");
-			} else {
+				tr.getTestRequestResponses().put("\nERROR","Please select the document type!");
+			}
+			 else if (result.size() == 0) {
+					tr.setCriteriamet(CriteriaStatus.FALSE);
+					tr.getTestRequestResponses()
+					.put("\nERROR",
+							"No messages found! Send a message and try again.\nPlease make sure that the Vendor Email Address is entered and matches the email address from which the email is being sent.\nWait for atleast 30 seconds after sending the email to ensure successful delivery to the ETT.");
+				} 
+			 else {
 				tr.setCriteriamet(CriteriaStatus.TRUE);
 			}
 		} catch (Exception e) {
