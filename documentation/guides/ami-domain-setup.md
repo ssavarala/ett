@@ -45,6 +45,6 @@ This should be followed by these steps
 
 1. Setting up the edge domain using http://edge.mydomain.com:8081/config-ui
 2. Setting up the direct domain using http://direct.domain.com:8081/config-ui
-3. Creating these domains in james application bundled in: james.mydomain.com (/opt/james) and direct.domain.com (/opt/direct/james)
+3. Creating these domains in james application bundled in: james.mydomain.com (/opt/james) and direct.mydomain.com (/opt/direct/james)
 4. Configuring the application.properties in the edge.mydomain.com (/opt/ttp/application.properties) with the above domains.
 
