@@ -55,11 +55,10 @@ direct.mydomain.com NS ns2.direct.mydomain.com
 ```
 
 ### NOTE
-Please note that after the glue record setup below, in order for the domain to resolve, the bundled direct 
-has to be functional with the DNS entries and running for the name resolution. 
-If you have not already completed the steps below, you may have to use the IP addresses to access them.
+Please note that after the glue record setup above, in order for the edge.mydomain.com/direct.mydomain.com to resolve properly,
+the name servers in those instances have to be configured and running (providing the A records for name resolution) - which are detailed in the steps below. You may have to use their ip addresses in the steps 1/2 below (you could temporarily enable A records directly from the domain provider, but have to delete them and test after the completion however):
 
-This should be followed by these steps
+#### Steps to configure the domains within the servers:
 
 1. Setting up the edge domain using http://edge.mydomain.com:8081/config-ui
 2. Setting up the direct domain using http://direct.domain.com:8081/config-ui
