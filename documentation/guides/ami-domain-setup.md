@@ -15,6 +15,8 @@ providing an easy way to manage the entries within the server
 
 For this setup to work, these records needed to be added in your domain provider setup:
 
+
+
 ##edge server:
 #####A records (glue records)
 ```
@@ -52,6 +54,10 @@ direct.mydomain.com NS  ns1.direct.mydomain.com
 direct.mydomain.com NS ns2.direct.mydomain.com
 ```
 
+### NOTE
+Please note that after the glue record setup below, in order for the domain to resolve, the bundled direct 
+has to be functional with the DNS entries and running for the name resolution. 
+If you have not already completed the steps below, you may have to use the IP addresses to access them.
 
 This should be followed by these steps
 
