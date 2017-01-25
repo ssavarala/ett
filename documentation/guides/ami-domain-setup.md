@@ -20,8 +20,8 @@ For this setup to work, these records needed to be added in your domain provider
 ##edge server:
 #####A records (glue records)
 ```
-ns1.edge.mydomain.com  ip-of-the-edge-server
-ns2.edge.mydomain.com  ip-of-the-edge-server
+ns1.edge.mydomain.com         A        ip-of-the-edge-server
+ns2.edge.mydomain.com         A        ip-of-the-edge-server
 ```
 
 #####NS records 
@@ -44,8 +44,8 @@ james.mydomain.com   MX james.mydomain.com
 ##direct server:
 #####A records (glue records)
 ```
-ns1.direct.mydomain.com  ip-of-the-edge-server
-ns2.direct.mydomain.com  ip-of-the-edge-server
+ns1.direct.mydomain.com      A       ip-of-the-direct-server
+ns2.direct.mydomain.com      A       ip-of-the-direct-server
 ```
 
 #####NS records 
