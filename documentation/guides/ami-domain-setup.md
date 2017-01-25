@@ -15,7 +15,7 @@ providing an easy way to manage the entries within the server
 
 For this setup to work, these records needed to be added in your domain provider setup:
 
-####edge server:
+###edge server:
 #####A records (glue records)
 ns1.edge.mydomain.com  ip-of-the-edge-server
 ns2.edge.mydomain.com  ip-of-the-edge-server
@@ -24,14 +24,14 @@ ns2.edge.mydomain.com  ip-of-the-edge-server
 edge.mydomain.com NS  ns1.edge.mydomain.com
 edge.mydomain.com NS ns2.edge.mydomain.com
 
-####james server:
+###james server:
 #####A record
 james.mydomain.com  A  ip-of-the-james-server
 #####MX record
 james.mydomain.com   MX james.mydomain.com
 
 
-####direct server:
+###direct server:
 #####A records (glue records)
 ns1.direct.mydomain.com  ip-of-the-edge-server
 ns2.direct.mydomain.com  ip-of-the-edge-server
