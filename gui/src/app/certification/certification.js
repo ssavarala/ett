@@ -1,8 +1,7 @@
 var certMod = angular.module('ttt.certification', [
     // Modules
     'ttt.certification.certh1',
-    'ttt.certification.certh2',
-    'ttt.certification.certb1'
+    'ttt.certification.certh2'
 ]);
 
 certMod.config(['$stateProvider',
@@ -34,16 +33,11 @@ certMod.config(['$stateProvider',
             })
             .state('certification.certb1', {
                 url: '/certb1',
-                abstract: true,
                 views: {
                     "certification": {
-                        controller: 'Certh1Ctrl',
-                        templateUrl: 'certification/certificationCriteriah1.tpl.html'
+                        controller: 'CertificationCriteriaCtrl',
+                        templateUrl: 'certification/certificationCriteriab1.tpl.html'
                     }
-                },
-                data: {
-                    filterCrit: 'b1',
-                    pageTitle:' 170.315(b)(1)'
                 }
             })
             .state('certification.certh1', {

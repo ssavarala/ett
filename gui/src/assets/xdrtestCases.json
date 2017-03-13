@@ -6,10 +6,8 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "sender",
-    "criteria":"['b1-1']", 
     "inputs": [{
         "name": "Direct From Address",
-        "hoverlabel":"Direct From Address: SUT (HISP) outgoing SMTP address (or) MDN.",
         "key": "direct_from",
         "type": "string"
     }, {
@@ -37,10 +35,8 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "sender",
-    "criteria":"['b1-1']", 
     "inputs": [{
         "name": "Direct From Address",
-        "hoverlabel":"Direct From Address: SUT (HISP) outgoing SMTP address (or) MDN.",
         "key": "direct_from",
         "type": "string"
     }],
@@ -64,10 +60,8 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "receiver",
-    "criteria":"['b1-3']",
     "inputs": [{
         "name": "Endpoint",
-        "hoverlabel":"Receiving endpoint of the SUT for XDR SOAP messages",
         "key": "targetEndpointTLS",
         "type": "string"
     }, {
@@ -81,7 +75,7 @@
     "Direct Address Block": "Included",
     "SUT: Sender/ Receiver": "Receiver (Edge - SUT)",
     "Test Tool: Sender / Receiver": "Sender (Test Tool)",
-    "Purpose/Description": "Verify that an Edge system can receive a properly formatted XDR message. The SUT will receive the XDR message with a '<direct:from>' and '<direct:to>' address of testcase3@ttpedge.sitenv.org. This was designed to require the SUT's endpoint as the only input parameter.",
+    "Purpose/Description": "Verify that an Edge system can receive a properly formatted XDR message.",
     "Conformance  Test Details": "",
     "Expected Test Results": "Edge system is capable of receiving and processing a valid message, test procedure may include other details for verification. Test Tool is satisfied with a good response.",
     "Required / Conditional per Direct Edge Protocol Guide": "R",
@@ -95,10 +89,8 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "receiver",
-    "criteria":"['b1-3']",
     "inputs": [{
         "name": "Endpoint",
-        "hoverlabel":"Receiving endpoint of the SUT for XDR SOAP messages",
         "key": "targetEndpointTLS",
         "type": "string"
     }],
@@ -108,7 +100,7 @@
     "Direct Address Block": "N/A",
     "SUT: Sender/ Receiver": "Receiver (Edge - SUT)",
     "Test Tool: Sender / Receiver": "Sender (Test Tool)",
-    "Purpose/Description": "Verify that the Edge system throws an error when an incorrect message is received. The SUT will receive the XDR message with a '<direct:from>' and '<direct:to>' address of testcase4a@ttpedge.sitenv.org. This was designed to require the SUT's endpoint as the only input parameter.",
+    "Purpose/Description": "Verify that the Edge system throws an error when an incorrect message is received.",
     "Conformance  Test Details": "Create incorrect messages which include Bad SOAP Envelope Details",
     "Expected Test Results": "Edge system is rejecting the various bad messages sent from the test tool.",
     "Required / Conditional per Direct Edge Protocol Guide ": "R",
@@ -122,10 +114,8 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "receiver",
-    "criteria":"['b1-3']",
     "inputs": [{
         "name": "Endpoint",
-        "hoverlabel":"Receiving endpoint of the SUT for XDR SOAP messages",
         "key": "targetEndpointTLS",
         "type": "string"
     }],
@@ -135,7 +125,7 @@
     "Direct Address Block": "N/A",
     "SUT: Sender/ Receiver": "Receiver (Edge - SUT)",
     "Test Tool: Sender / Receiver": "Sender (Test Tool)",
-    "Purpose/Description": "Verify that the Edge system throws an error when an incorrect message is received. The SUT will receive the XDR message with a '<direct:from>' and '<direct:to>' address of testcase4b@ttpedge.sitenv.org. This was designed to require the SUT's endpoint as the only input parameter.",
+    "Purpose/Description": "Verify that the Edge system throws an error when an incorrect message is received.",
     "Conformance  Test Details": "Create incorrect messages which include Bad SOAP Body Details",
     "Expected Test Results": "Edge system is rejecting the various bad messages sent from the test tool.",
     "Required / Conditional per Direct Edge Protocol Guide ": "R",
@@ -149,10 +139,8 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "receiver",
-    "criteria":"['b1-3']",
     "inputs": [{
         "name": "Endpoint",
-        "hoverlabel":"Receiving endpoint of the SUT for XDR SOAP messages",
         "key": "targetEndpointTLS",
         "type": "string"
     }],
@@ -162,7 +150,7 @@
     "Direct Address Block": "Included",
     "SUT: Sender/ Receiver": "Receiver (Edge - SUT)",
     "Test Tool: Sender / Receiver": "Sender (Test Tool)",
-    "Purpose/Description": "Verify that an Edge system can receive a properly formatted XDR message. The SUT will receive the XDR message with a '<direct:from>' and '<direct:to>' address of testcase5@ttpedge.sitenv.org. This was designed to require the SUT's endpoint as the only input parameter.",
+    "Purpose/Description": "Verify that an Edge system can receive a properly formatted XDR message.",
     "Conformance  Test Details": "",
     "Expected Test Results": "Edge system is capable of receiving and processing a valid message with Full Metadata, test procedure may include other details for verification. Test Tool is satisfied with a good response.",
     "Required / Conditional per Direct Edge Protocol Guide": "R",
@@ -176,10 +164,8 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "sender",
-    "criteria":"['b1-1']", 
     "inputs": [{
         "name": "Direct From Address",
-        "hoverlabel":"Direct From Address: SUT (HISP) outgoing SMTP address (or) MDN.",
         "key": "direct_from",
         "type": "string"
     }],
@@ -203,7 +189,6 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "sender",
-    "criteria":"['b1-1']", 
     "inputs": [{
         "name": "IP Address",
         "key": "ip_address",
@@ -229,7 +214,6 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "receiver",
-    "criteria":"['b1-3']", 
     "inputs": [{
         "name": "IP Address",
         "key": "ip_address",
@@ -259,7 +243,6 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "receiver",
-    "criteria":"['b1-3']",
     "inputs": [{
         "name": "IP Address",
         "key": "ip_address",
@@ -285,7 +268,7 @@
     "name": "XDR Test 10",
     "id": 10,
     "ID": "10",
-    "desc": "Test Tool sends a Direct Message to the SUT.  The SUT must translate this to an XDR message and send it back to the Edge.\nVerify that the HISP system can create an XDR message per the specification and forward to Edge.  The return endpoint is provided below. The validation report will be sent to the email address registered with the Direct address enter during setup.",
+    "desc": "Test Tool sends a Direct Message to the SUT.  The SUT must translate this to an XDR message and send it back to the Edge.\nVerify that the HISP system can create an XDR message per the specification and forward to Edge.  The return endpoint is provided below.",
     "sutEdge": false,
     "sutHisp": true,
     "sutRole": "sender",
@@ -313,7 +296,7 @@
     "name": "XDR Test 11",
     "id": 11,
     "ID": "11",
-    "desc": "Test Tool sends a Direct Message + XDM to the SUT.  The SUT must translate this to an XDR message with Limited Metadata and send it back to the Edge.\nVerify that the HISP system can create an XDR message per the specification and forward to Edge. The return endpoint is provided below. The validation report will be sent to the email address registered with the Direct address enter during setup.",
+    "desc": "Test Tool sends a Direct Message + XDM to the SUT.  The SUT must translate this to an XDR message with Limited Metadata and send it back to the Edge.\nVerify that the HISP system can create an XDR message per the specification and forward to Edge. The return endpoint is provided below.",
     "sutEdge": false,
     "sutHisp": true,
     "sutRole": "sender",
@@ -341,7 +324,7 @@
     "name": "XDR Test 12",
     "id": 12,
     "ID": "12",
-    "desc": "Test Tool sends a Direct Message + XDM to the SUT.  The SUT must translate this to an XDR message with Full Metadata and send it back to the Edge.\nVerify that the HISP system can create an XDR message per the specification and forward to Edge. The return endpoint is provided below.The validation report will be sent to the email address registered with the Direct address enter during setup.",
+    "desc": "Test Tool sends a Direct Message + XDM to the SUT.  The SUT must translate this to an XDR message with Full Metadata and send it back to the Edge.\nVerify that the HISP system can create an XDR message per the specification and forward to Edge. The return endpoint is provided below.",
     "sutEdge": false,
     "sutHisp": true,
     "sutRole": "sender",
@@ -514,7 +497,6 @@
     "sutRole": "receiver",
     "inputs": [{
         "name": "Endpoint",
-        "hoverlabel":"Receiving endpoint of the SUT for XDR SOAP messages",
         "key": "targetEndpointTLS",
         "type": "string"
     }],
@@ -541,7 +523,6 @@
     "sutRole": "receiver",
     "inputs": [{
         "name": "Endpoint",
-        "hoverlabel":"Receiving endpoint of the SUT for XDR SOAP messages",
         "key": "targetEndpointTLS",
         "type": "string"
     }],
@@ -605,7 +586,6 @@
     "sutRole": "sender",
     "inputs": [{
         "name": "Direct From Address",
-        "hoverlabel":"Direct From Address: SUT (HISP) outgoing SMTP address (or) MDN.",
         "key": "direct_from",
         "type": "string"
     }],
@@ -755,10 +735,8 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "sender",
-    "criteria":"['b1-1']", 
     "inputs": [{
         "name": "Direct From Address",
-        "hoverlabel":"Direct From Address: SUT (HISP) outgoing SMTP address (or) MDN.",
         "key": "direct_from",
         "type": "string"
     }],
@@ -782,16 +760,13 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "sender",
-    "criteria":"['b1-1']", 
     "status": "configure",
     "inputs": [{
         "name": "Direct From Address",
-        "hoverlabel":"Direct From Address: SUT (HISP) outgoing SMTP address (or) MDN.",
         "key": "direct_from",
         "type": "string"
     }, {
         "name": "Endpoint",
-        "hoverlabel":"Receiving endpoint of the SUT for XDR SOAP messages",
         "key": "targetEndpointTLS",
         "type": "string"
     }],
@@ -816,16 +791,13 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "sender",
-    "criteria":"['b1-1']", 
     "status": "configure",
     "inputs": [{
         "name": "Direct From Address",
-        "hoverlabel":"Direct From Address: SUT (HISP) outgoing SMTP address (or) MDN.",
         "key": "direct_from",
         "type": "string"
     }, {
         "name": "Endpoint",
-        "hoverlabel":"Receiving endpoint of the SUT for XDR SOAP messages",
         "key": "targetEndpointTLS",
         "type": "string"
     }],
@@ -1251,10 +1223,8 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "sender",
-    "criteria":"['b1-1']", 
     "inputs": [{
         "name": "Direct From Address",
-        "hoverlabel":"Direct From Address: SUT (HISP) outgoing SMTP address (or) MDN.",
         "key": "direct_from",
         "type": "string"
     }],
@@ -1278,10 +1248,8 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "sender",
-    "criteria":"['b1-1']", 
     "inputs": [{
         "name": "Direct From Address",
-        "hoverlabel":"Direct From Address: SUT (HISP) outgoing SMTP address (or) MDN.",
         "key": "direct_from",
         "type": "string"
     }],
@@ -1305,16 +1273,13 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "sender",
-    "criteria":"['b1-1']", 
     "status": "configure",
     "inputs": [{
         "name": "Direct From Address",
-        "hoverlabel":"Direct From Address: SUT (HISP) outgoing SMTP address (or) MDN.",
         "key": "direct_from",
         "type": "string"
     }, {
         "name": "Endpoint",
-        "hoverlabel":"Receiving endpoint of the SUT for XDR SOAP messages",
         "key": "targetEndpointTLS",
         "type": "string"
     }],
@@ -1339,16 +1304,13 @@
     "sutEdge": true,
     "sutHisp": false,
     "sutRole": "sender",
-    "criteria":"['b1-1']", 
     "status": "configure",
     "inputs": [{
         "name": "Direct From Address",
-        "hoverlabel":"Direct From Address: SUT (HISP) outgoing SMTP address (or) MDN.",
         "key": "direct_from",
         "type": "string"
     }, {
         "name": "Endpoint",
-        "hoverlabel":"Receiving endpoint of the SUT for XDR SOAP messages",
         "key": "targetEndpointTLS",
         "type": "string"
     }],

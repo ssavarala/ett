@@ -57,12 +57,7 @@
 				<div class="col-md-7 small-padding" ng-switch on="field.datatype">
 
 					<!-- When String -->
-					<div ng-if="field.placeHolder">
-					    <input type="{{field.datatype | inputFilter}}" placeholder="{{field.placeHolder}}" ng-model="fieldInput[field.name]" id="{{field.name}}" class="form-control" ng-disabled="{{field.readOnly}}" ng-switch-when="String" />
-					</div>
-					<div ng-if="!field.placeHolder">
-					    <input type="{{field.datatype | inputFilter}}" placeholder="{{field.name}}" ng-model="fieldInput[field.name]" id="{{field.name}}" class="form-control" ng-disabled="{{field.readOnly}}" ng-switch-when="String" />
-					</div>
+					<input type="{{field.datatype | inputFilter}}" placeholder="{{field.name}}" ng-model="fieldInput[field.name]" id="{{field.name}}" class="form-control" ng-disabled="{{field.readOnly}}" ng-switch-when="String" />
 
 					<!-- When ListedString -->
 					<div class="input-group" ng-switch-when="ListedString" ng-if="field.allowedValues">

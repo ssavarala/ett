@@ -51,7 +51,6 @@ public class MU2ReceiverTests {
 		int headerFlag = 0;
 		int dispatchedFlag = 0;
 		int xHeaderFlag = 0;
-		int failureFlag = 0;
 		Store store;
 		Properties props = new Properties();
 
@@ -135,9 +134,9 @@ public class MU2ReceiverTests {
 								log.info("Failure DSN with X-header found with ID " + id);
 
 								ZonedDateTime endTime = ZonedDateTime.now();
-								duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-								result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
-								//	timeout = Duration.between(ZonedDateTime.parse(startTime),endTime);
+								duration = Duration.between(endTime, ZonedDateTime.parse(startTime));
+								result.put("\nElapsed Time", duration.toString().substring(3)+"\n");
+								//	timeout = Duration.between(endTime, ZonedDateTime.parse(startTime));
 							}
 						}
 
@@ -171,9 +170,9 @@ public class MU2ReceiverTests {
 													//	buffer.get("\n"+"Disposition").toLowerCase().contains("fail");
 													ZonedDateTime endTime = ZonedDateTime.now();
 													result.putAll(buffer);
-													duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-													result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
-													//	timeout = Duration.between(ZonedDateTime.parse(startTime),endTime);
+													duration = Duration.between(endTime, ZonedDateTime.parse(startTime));
+													result.put("\nElapsed Time", duration.toString().substring(3)+"\n");
+													//	timeout = Duration.between(endTime, ZonedDateTime.parse(startTime));
 													log.info("Failure MDN found with ID " + id);
 												}
 
@@ -215,9 +214,9 @@ public class MU2ReceiverTests {
 								log.info("Failure DSN with X-header found with ID " + id);
 
 								ZonedDateTime endTime = ZonedDateTime.now();
-								duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-								result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
-								timeout = Duration.between(ZonedDateTime.parse(startTime),endTime);
+								duration = Duration.between(endTime, ZonedDateTime.parse(startTime));
+								result.put("\nElapsed Time", duration.toString().substring(3)+"\n");
+								timeout = Duration.between(endTime, ZonedDateTime.parse(startTime));
 							}
 						}
 
@@ -251,9 +250,9 @@ public class MU2ReceiverTests {
 													//	buffer.get("\n"+"Disposition").toLowerCase().contains("fail");
 													ZonedDateTime endTime = ZonedDateTime.now();
 													result.putAll(buffer);
-													duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-													result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
-													timeout = Duration.between(ZonedDateTime.parse(startTime),endTime);
+													duration = Duration.between(endTime, ZonedDateTime.parse(startTime));
+													result.put("\nElapsed Time", duration.toString().substring(3)+"\n");
+													timeout = Duration.between(endTime, ZonedDateTime.parse(startTime));
 													log.info("Failure MDN found with ID " + id);
 												}
 
@@ -272,97 +271,7 @@ public class MU2ReceiverTests {
 				}
 
 			}
-			else if (type.equals("timeout28")){
-				System.out.println("Search X-Original-Message-ID or Failure MDN on timeout");
-				for (Message message : messages){
-					if(message.getContent() instanceof Multipart){
-						MimeMessage mime = (MimeMessage) message;
-						Message message1 = new MimeMessage(mime);
-						Multipart multipart1 = (Multipart) message1.getContent();
-						for (int i = 0; i < multipart1.getCount(); i++) {
-							BodyPart bodyPart = multipart1.getBodyPart(i);
-							InputStream stream = bodyPart.getInputStream();
-							byte[] targetArray = IOUtils.toByteArray(stream);
-							//	System.out.println(new String(targetArray));
 
-							String searchString = new String(targetArray);
-
-							if (searchString.contains(id) && searchString.contains("X-Original-Message-ID")){
-								dsnFlag = 1;
-								result.put("\nNotification Type", "DSN"+"\n"+searchString);
-								System.out.println("\nX-Original-Message-ID Found\n");
-								log.info("Failure DSN with X-header found with ID " + id);
-
-								ZonedDateTime endTime = ZonedDateTime.now();
-								duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-								result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
-								timeout = Duration.between(ZonedDateTime.parse(startTime),endTime);
-								failureFlag = 1;
-							}
-						}
-
-
-
-
-						if (dsnFlag == 0){
-							//		MimeMessage mime = (MimeMessage) message;
-							//		Message message1 = new MimeMessage(mime);
-							if(!(message1.getContentType().contains("delivery-status"))){
-								Object m =  message.getContent();
-								if (message.getContent() instanceof Multipart){
-									Multipart multipart = (Multipart) message.getContent();
-									for (int i = 0; i < ((Multipart) m).getCount(); i++){
-										BodyPart bodyPart = multipart.getBodyPart(i);
-										if (!(bodyPart.isMimeType("text/*"))){
-											Object d =   bodyPart.getContent();
-											//d.getNotifications();
-											if (d instanceof DispositionNotification){
-												Enumeration headers2 = ((DispositionNotification) d).getNotifications().getAllHeaders();
-												while (headers2.hasMoreElements()) {
-													Header h1 = (Header) headers2.nextElement();
-													buffer.put("\n"+h1.getName(), h1.getValue()+"\n");
-												}
-												//	System.out.println(buffer);
-												if(buffer.containsValue(id+"\n")
-														&& (buffer.containsValue("automatic-action/MDN-sent-automatically;failed"+"\n") || 
-																buffer.containsValue("automatic-action/MDN-sent-automatically; failed"+"\n") ||
-																buffer.containsValue("automatic-action/MDN-sent-automatically;failure"+"\n") ||
-																buffer.containsValue("automatic-action/MDN-sent-automatically; failure"+"\n"))){
-													//	buffer.get("\n"+"Disposition").toLowerCase().contains("fail");
-													ZonedDateTime endTime = ZonedDateTime.now();
-													result.putAll(buffer);
-													duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-													result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
-													timeout = Duration.between(ZonedDateTime.parse(startTime),endTime);
-													log.info("Failure MDN found with ID " + id);
-													failureFlag = 1;
-												}
-												if(buffer.containsValue(id+"\n")
-														&& (buffer.containsValue("automatic-action/MDN-sent-automatically;dispatched"+"\n"))){
-													//	buffer.get("\n"+"Disposition").toLowerCase().contains("fail");
-													ZonedDateTime endTime = ZonedDateTime.now();
-													result.putAll(buffer);
-													duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-													result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
-													timeout = Duration.between(ZonedDateTime.parse(startTime),endTime);
-													log.info("Dispatched MDN found with ID. Failing case" + id);
-													dispatchedFlag = 1;
-												}
-
-											}
-
-										}
-
-									}
-
-								}
-							}
-						}
-					}
-
-				}
-
-			}
 			else if (type.equals("28")){
 				System.out.println("Search X-Original-Message-ID or Failure MDN");
 				for (Message message : messages){
@@ -410,9 +319,9 @@ public class MU2ReceiverTests {
 
 												else{
 													ZonedDateTime endTime = ZonedDateTime.now();
-													duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
+													duration = Duration.between(endTime, ZonedDateTime.parse(startTime));
 													result.putAll(buffer);
-													result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
+													result.put("\nElapsed Time", duration.toString().substring(3)+"\n");
 												}
 
 
@@ -470,15 +379,15 @@ public class MU2ReceiverTests {
 											headerFlag = 1;
 											ZonedDateTime endTime = ZonedDateTime.now();
 											result.putAll(buffer);
-											duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-											result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
+											duration = Duration.between(endTime, ZonedDateTime.parse(startTime));
+											result.put("\nElapsed Time", duration.toString().substring(3)+"\n");
 										}
 
 										else if (Utils.isProcessedMDN(list)){
 											ZonedDateTime endTime = ZonedDateTime.now();
 											result.putAll(buffer);
-											duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-											result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
+											duration = Duration.between(endTime, ZonedDateTime.parse(startTime));
+											result.put("\nElapsed Time", duration.toString().substring(3)+"\n");
 										}
 
 
@@ -535,15 +444,15 @@ public class MU2ReceiverTests {
 											headerFlag = 1;
 											ZonedDateTime endTime = ZonedDateTime.now();
 											result.putAll(buffer);
-											duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-											result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
+											duration = Duration.between(endTime, ZonedDateTime.parse(startTime));
+											result.put("\nElapsed Time", duration.toString().substring(3)+"\n");
 										}
 
 										else if (Utils.isProcessedMDN(list)){
 											ZonedDateTime endTime = ZonedDateTime.now();
 											result.putAll(buffer);
-											duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-											result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
+											duration = Duration.between(endTime, ZonedDateTime.parse(startTime));
+											result.put("\nElapsed Time", duration.toString().substring(3)+"\n");
 											log.info("Processed MDN found with ID " + id);
 										}
 
@@ -585,8 +494,8 @@ public class MU2ReceiverTests {
 										if(buffer.containsValue(id+"\n") && (buffer.containsValue("automatic-action/MDN-sent-automatically;dispatched"+"\n") || buffer.containsValue("automatic-action/MDN-sent-automatically; dispatched"+"\n"))){
 											ZonedDateTime endTime = ZonedDateTime.now();
 											result.putAll(buffer);
-											duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-											result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
+											duration = Duration.between(endTime, ZonedDateTime.parse(startTime));
+											result.put("\nElapsed Time", duration.toString().substring(3)+"\n");
 											log.info("Dispatched MDN found with ID " + id);
 										}
 
@@ -639,8 +548,8 @@ public class MU2ReceiverTests {
 
 											ZonedDateTime endTime = ZonedDateTime.now();
 											result.putAll(buffer);
-											duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-											result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
+											duration = Duration.between(endTime, ZonedDateTime.parse(startTime));
+											result.put("\nElapsed Time", duration.toString().substring(3)+"\n");
 											log.info("Processed & Dispatched MDNs found with ID " + id);
 										}
 
@@ -663,7 +572,7 @@ public class MU2ReceiverTests {
 				for (Message message : messages){
 					MimeMessage mime = (MimeMessage) message;
 					Message message1 = new MimeMessage(mime);
-					if(!(message1.getSubject()!=null && message1.getSubject().equals("Re:"))){
+					if(!(message1.getSubject().equals("Re:"))){
 						if(message1.getContent() instanceof Multipart){
 							Multipart multipart1 = (Multipart) message1.getContent();
 							for (int i = 0; i < multipart1.getCount(); i++) {
@@ -732,8 +641,8 @@ public class MU2ReceiverTests {
 						ZonedDateTime endTime = ZonedDateTime.now();
 						result.put("\n","\n"+searchString);
 						result.putAll(buffer);
-						duration = Duration.between(ZonedDateTime.parse(startTime),endTime);
-						result.put("\nElapsed Time", duration.toString().replace("PT", "")+"\n");
+						duration = Duration.between(endTime, ZonedDateTime.parse(startTime));
+						result.put("\nElapsed Time", duration.toString().substring(3)+"\n");
 						log.info("Processed & Failure Notifications found with ID " + id);
 					}
 				}
@@ -754,31 +663,6 @@ public class MU2ReceiverTests {
 				tr.setCriteriamet(CriteriaStatus.FALSE);
 				tr.getTestRequestResponses().put("ERROR","MDN received after timeout");
 				log.error("MDN received after timeout");
-
-			}
-			
-			else if(timeout!=null && failureFlag ==1 && (timeout.toMinutes() < ti.sutCommandTimeoutInSeconds)){
-                System.out.println(timeout.toMinutes());
-				tr.setCriteriamet(CriteriaStatus.FALSE);
-				tr.getTestRequestResponses().put("ERROR","Failure Notification received before the entered timeout of "+ ti.sutCommandTimeoutInSeconds+ " minutes");
-				log.error("MDN received before timeout");
-
-			}
-			
-			else if(timeout!=null && dispatchedFlag == 0 && failureFlag ==1 && timeout.toMinutes()+1 > ti.sutCommandTimeoutInSeconds && timeout.toMinutes() < ti.sutCommandTimeoutInSeconds+5){
-
-				tr.setCriteriamet(CriteriaStatus.STEP2);
-				tr.getTestRequestResponses().put("INFO","Failure Notification received");
-				System.out.println(timeout.toMinutes());
-				log.info("Failure Notification received");
-
-			}
-			
-			else if(timeout!=null && dispatchedFlag == 0 && failureFlag ==1 && (timeout.toMinutes() > ti.sutCommandTimeoutInSeconds+5)){
-
-				tr.setCriteriamet(CriteriaStatus.TRUE);
-				tr.getTestRequestResponses().put("SUCCESS","Failure Notification received");
-				log.info("Failure Notification received");
 
 			}
 
