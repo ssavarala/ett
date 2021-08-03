@@ -8,6 +8,7 @@ var ttt = angular.module('ttt', [
     'ttt.edge',
     'ttt.hisp',
     'ttt.certification',
+    'ttt.surveillance',
     'ttt.documents',
     'ttt.validators',
     'ttt.admin',
@@ -47,8 +48,17 @@ var ttt = angular.module('ttt', [
     '720kb.tooltips',
     'finderTree',
     'ngDropover',
-    'angular-clipboard'
+    'angular-clipboard',
+    'angulartics', 'angulartics.google.analytics'
 ]);
+
+ttt.config(['$analyticsProvider',
+    function($analyticsProvider) {
+        $analyticsProvider.firstPageview(true);
+        $analyticsProvider.withAutoBase(true);
+    }
+]);
+
 
 ttt.config(['$stateProvider', '$urlRouterProvider',
     function($stateProvider, $urlRouterProvider) {
@@ -71,9 +81,10 @@ ttt.config(['KeepaliveProvider', 'IdleProvider',
 ]);
 
 // Run idle as soon as the app starts
-ttt.run(['Idle',
-    function(Idle) {
+ttt.run(['Idle','$rootScope',
+    function(Idle,$rootScope) {
         Idle.watch();
+$rootScope.showmessage = false;		
     }
 ]);
 

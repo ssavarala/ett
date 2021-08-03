@@ -86,7 +86,7 @@
 
                 <div class="form-group">
                     <label class="control-label" for="wrapped">Message format&nbsp;
-                        <i class="fa fa-question-circle" tooltips tooltip-title="The format of the message. If wrapped is selected, the subject of the message will be placed in the encrypted part." tooltip-side="right"></i>
+                        <i class="fa fa-question-circle" tooltips tooltip-title="The format of the message, if wrapped is selected, the header is wrapped to include the 'To', 'From', 'CC', 'BCC', and 'Subject' lines. See RFC 822 for details." tooltip-side="right"></i>
                     </label>
                     <div class="input-group">
                         <div class="btn-group">
@@ -178,10 +178,10 @@
 
             <div class="form-group">
                 <label class="control-label" for="subject">
-                    Subject&nbsp;
-                    <i class="fa fa-question-circle" tooltips tooltip-title="Subject of the email. This field is optional." tooltip-side="right"></i>
+                    Message Subject or Test Session Name&nbsp;
+                    <i class="fa fa-question-circle" tooltips tooltip-title="Message Subject or Test Session Name. This field is optional." tooltip-side="right"></i>
                 </label>
-                <input type="text" placeholder="Subject" id="subject" class="form-control" ng-model="message.subject" name="subject">
+                <input type="text" placeholder="Message Subject  or Test Session Name" id="subject" class="form-control" ng-model="message.subject" name="subject">
             </div>
 
             <div class="form-group">
@@ -195,8 +195,8 @@
             <hr>
 
             <div class="form-group">
-                <label class="control-label" for="ownCcda">Upload your own CCDA&nbsp;
-                    <i class="fa fa-question-circle" tooltips tooltip-title="Upload your own CCDA to attach the message. Only one CCDA document will be attached either your own or the one you selected from the tool." tooltip-side="right"></i>
+                <label class="control-label" for="ownCcda">Upload your own C-CDA&nbsp;
+                    <i class="fa fa-question-circle" tooltips tooltip-title="Upload your own C-CDA to attach the message. Only one C-CDA document will be attached either your own or the one you selected from the tool." tooltip-side="right"></i>
                 </label>
 
                 <div flow-init="{target: apiUrl + 'upload'}" flow-files-submitted="$flow.upload()" flow-file-success="successCcda($message)">

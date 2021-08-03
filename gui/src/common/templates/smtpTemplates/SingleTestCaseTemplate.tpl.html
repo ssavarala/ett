@@ -25,15 +25,25 @@
 		</span>
 		</time>
 
-		<time class="fail" ng-click="startTest(test, fieldInput)" ng-switch-when="fail">
+		<time class="fail" ng-click="startTest(test, fieldInput)" ng-switch-when="retry">
 			<span class="fail">
 			<i class="fa fa-times"></i>
 		</span>
 			<span class="retry">
 			Retry
 		</span>
-
 		</time>
+
+
+		<time class="fail" ng-click="startTest(test, fieldInput)" ng-switch-when="fail">
+			<span class="fail">
+			<i class="fa fa-times"></i>
+		</span>
+			<span class="eerror">
+			Error
+		</span>
+		</time>
+
 		<div class="cancel" ng-click="resetTest(test)" ng-if="test.status !== 'na'">
 			<div class="pending">
 				<i class="fa fa-trash"></i>
@@ -85,6 +95,15 @@
 					<!-- When CCDAWidgetReceiver -->
 					<div class="input-group" ng-switch-when="CCDAWidgetReceiver" style="width:100%; margin-top:10px;">
 						<ccda-widgetreceiver ng-model="fieldInput.ccdaDocument"></ccda-widgetreceiver>
+					</div>
+
+					<!-- When CCDAWidgetxdr -->
+					<div class="input-group" ng-switch-when="CCDAWidgetXdr" style="width:100%; margin-top:10px;">
+						<ccda-widgetxdr ng-model="fieldInput.ccdaDocument"></ccda-widgetxdr>
+					</div>
+					<!-- When CCDAWidgetReceiverSdr -->
+					<div class="input-group" ng-switch-when="CCDAWidgetReceiverXdr" style="width:100%; margin-top:10px;">
+						<ccda-widgetreceiverxdr ng-model="fieldInput.ccdaDocument"></ccda-widgetreceiverxdr>
 					</div>
 
 				</div>

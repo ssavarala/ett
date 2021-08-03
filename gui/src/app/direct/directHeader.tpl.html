@@ -1,20 +1,20 @@
 <div class="navbar">
-    <div class="brand" id="appheader">
-        <a style="display: inline-block; text-shadow:none" href ui-sref="home">
-            <div msg="" id="apptitle" key="title">Edge Testing Tool - DIRECT</div>
-            <div msg="" key="subtitle" id="appsubtitle">ONC Certification</div>
-        </a>
-        <a href ui-sref="home" style="display: inline-block; text-shadow:none" class="pull-right">
-            <div msg="" key="subtitle" id="appsubtitle">
-                ETT Home <i class="fa fa-chevron-right"></i>
-            </div>
-        </a>
+<div ng-if="!showmessage" ng-include="'templates/warning.tpl.html'"></div>
+    <div id="appheader">
+		<a href="https://www.healthit.gov/" title="HealthIT.gov" rel="external" class="site-logo">
+			<img src="assets/img/healthit.gov.logo.png" alt="HealthIT.gov">
+		</a>
     </div>
-    <div class="navbar-inner" ng-controller="HeaderCtrl">
+    <div class="navbar navbar-default" ng-controller="HeaderCtrl">
         <ul class="nav">
+            <li>
+                <a href ui-sref="home">
+                    <div msg="" key="navbar.ttthome">ETT Home</div>
+                </a>
+            </li>
             <li ui-sref-active="active">
                 <a ui-sref=".home">
-                    <div msg="" key="navbar.home">Home</div>
+                    <div msg="" key="navbar.home">Direct Home</div>
                 </a>
             </li>
             <li ui-sref-active="active">
@@ -32,21 +32,21 @@
                     <div msg="" key="navbar.messageValidator">Message Validator</div>
                 </a>
             </li>
-            <li uib-dropdown ng-class="{active: $state.includes('direct.ccda') || $state.includes('direct.ccdar2')}">
-                <a href="#" uib-dropdown-toggle>CCDA Validators<b class="caret"></b></a>
+            <li uib-dropdown ng-class="{active: $state.includes('direct.ccda') || $state.includes('direct.ccdar2') || $state.includes('direct.ccdar3')}">
+                <a href="#" uib-dropdown-toggle>C-CDA Validators<b class="caret"></b></a>
                 <ul class="uib-dropdown-menu">
-                    <li><a ui-sref=".ccda">CCDA R1.1 Validator</a>
+                    <li><a ui-sref=".ccda">C-CDA R1.1 Validator</a>
                     </li>
-                    <li><a ui-sref=".ccdar2">CCDA R2.1 Validator</a>
+                    <li><a ui-sref=".ccdar2">C-CDA R2.1 Validator</a>
+                    </li>
+                    <li><a ui-sref=".ccdar3">Cures Update C-CDA R2.1 Validator</a>
                     </li>
                 </ul>
             </li>
-            <li uib-dropdown>
+            <li uib-dropdown ng-class="{active: $state.includes('direct.dcdt') || $state.includes('direct.dcdt2')}">
                 <a href="#" uib-dropdown-toggle>Cert Discovery<b class="caret"></b></a>
                 <ul class="uib-dropdown-menu">
-                    <li><a href="https://sitenv.org/web/site/direct-certificate-discovery-tool" target="_blank">2014 DCDT</a>
-                    </li>
-                    <li><a href="https://sitenv.org/web/site/direct-certificate-discovery-tool-2015" target="_blank">2015 DCDT</a>
+                    <li><a ui-sref=".dcdt2">2015 DCDT</a>
                     </li>
                 </ul>
             </li>

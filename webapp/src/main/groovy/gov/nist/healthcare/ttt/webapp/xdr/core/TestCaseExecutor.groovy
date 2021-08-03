@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import com.fasterxml.jackson.core.JsonParser
 
 /**
  *
@@ -339,14 +340,16 @@ class TestCaseExecutor {
 	
 	Result getSimpleSendReportWithCcda(XDRRecordInterface record) {
 		def content = new Content()
-
+		
 		if (record.criteriaMet != Status.PENDING) {
 
 			// Convert to json object
 			JsonNode jsonObject = null;
-			log.info(record.MDHTValidationReport);
+			//log.info(record.MDHTValidationReport);
 			try{
 				ObjectMapper mapper = new ObjectMapper();
+				mapper.configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true);
+				mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true)
 				jsonObject = mapper.readTree(record.MDHTValidationReport)
 			} catch(Exception e) {
 				log.error(e.getMessage());

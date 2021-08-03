@@ -1,38 +1,35 @@
 package gov.nist.healthcare.ttt.webapp.xdr.domain.testcase.edge.send
 
-import gov.nist.healthcare.ttt.database.log.CCDAValidationReportImpl;
-import gov.nist.healthcare.ttt.database.xdr.Status
-import gov.nist.healthcare.ttt.database.xdr.XDRRecordInterface
-import gov.nist.healthcare.ttt.database.xdr.XDRTestStepInterface
-import gov.nist.healthcare.ttt.parsing.Parsing;
-import gov.nist.healthcare.ttt.parsing.Parsing.MetadataLevel
-import gov.nist.healthcare.ttt.parsing.SOAPWithAttachment;
-import gov.nist.healthcare.ttt.webapp.common.model.exceptionJSON.TTTCustomException
-import gov.nist.healthcare.ttt.webapp.xdr.core.TestCaseExecutor
-import gov.nist.healthcare.ttt.webapp.xdr.domain.testcase.TestCaseBuilder
-import gov.nist.healthcare.ttt.webapp.xdr.domain.testcase.Result
-import gov.nist.healthcare.ttt.webapp.xdr.domain.testcase.Content
-import gov.nist.healthcare.ttt.webapp.xdr.domain.testcase.TestCaseSender
-import gov.nist.healthcare.ttt.xdr.domain.TkValidationReport
-import org.json.JSONArray
-import org.json.JSONObject
-
-import java.io.File;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.ContentBody
-import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.InputStreamBody
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.tika.Tika
+import org.json.JSONArray
+import org.json.JSONObject
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component
+
+import gov.nist.healthcare.ttt.database.xdr.Status
+import gov.nist.healthcare.ttt.database.xdr.XDRRecordInterface
+import gov.nist.healthcare.ttt.database.xdr.XDRTestStepInterface
+import gov.nist.healthcare.ttt.parsing.Parsing;
+import gov.nist.healthcare.ttt.parsing.SOAPWithAttachment;
+import gov.nist.healthcare.ttt.parsing.Parsing.MetadataLevel
+import gov.nist.healthcare.ttt.webapp.common.model.exceptionJSON.TTTCustomException
+import gov.nist.healthcare.ttt.webapp.xdr.core.TestCaseExecutor
+import gov.nist.healthcare.ttt.webapp.xdr.domain.testcase.Content
+import gov.nist.healthcare.ttt.webapp.xdr.domain.testcase.Result
+import gov.nist.healthcare.ttt.webapp.xdr.domain.testcase.TestCaseBuilder
+import gov.nist.healthcare.ttt.webapp.xdr.domain.testcase.TestCaseSender
+import gov.nist.healthcare.ttt.xdr.domain.TkValidationReport
 
 /**
  * Created by gerardin on 10/27/14.
@@ -44,8 +41,12 @@ final class TestCase1 extends TestCaseSender {
 	@Value('${ett.mdht.r2.url}')
 	String mdhtR2Endpoint;
 	
+	@Value('${ett.mdht.r3.url}')
+	String mdhtR3Endpoint;
+	
 	String ccdaR2Type = "170.315_b2_CIRI_Amb"
 	String ccdaR2ReferenceFilename = "170.315_b2_ciri__r11_sample1_v4.xml"
+	boolean cures = false;
 	
     @Autowired
     public TestCase1(TestCaseExecutor ex) {
@@ -59,6 +60,7 @@ final class TestCase1 extends TestCaseSender {
 		
 		// Set C-CDA variables
 		try {
+			this.cures = context.payload.cures;
 			this.ccdaR2ReferenceFilename = context.payload.name;
 	        ArrayList<String> path = context.payload.path;
 			if(path.size() > 1) {
@@ -111,20 +113,40 @@ final class TestCase1 extends TestCaseSender {
 		// Extracting C-CDA from the request
 		if(updatedRecord.status.equals(Status.PASSED)) {
 			SOAPWithAttachment soap = Parsing.parseMtom(report.request);
-			String res = validateCCDA_R2(soap.getAttachment().iterator().next(), updatedRecord)
+			List list = new ArrayList(soap.getAttachment());
+			println("LIST SIZE"+list.size());
+			byte[] v;
+			for(byte[] b : list){
+				InputStream is = new ByteArrayInputStream(b);
+			//	String mimeType = URLConnection.guessContentTypeFromStream(is);
+				String mimeType = new Tika().detect(b);
+				println("MIME TYPE"+mimeType);
+				if(mimeType.equals("application/xml") || mimeType.equals("text/xml")){
+					v = b;
+				}
+			}
+			
+			String res = validateCCDA_R2(v, updatedRecord, this.cures)
 //			log.info("CCDA validation result: " + res);
+			
 			updatedRecord.setMDHTValidationReport(res);
 		}
         executor.db.updateXDRRecord(updatedRecord)
 
     }
 	
-	public String validateCCDA_R2(byte[] ccdaFile, XDRRecordInterface record) {
+	public String validateCCDA_R2(byte[] ccdaFile, XDRRecordInterface record, boolean cures) {
 		log.info("Validating CCDA " + "ccda" + " with validation objective " + this.ccdaR2Type + " and reference filename " + this.ccdaR2ReferenceFilename);
 
 		// Query MDHT war endpoint
 		CloseableHttpClient client = HttpClients.createDefault();
-		HttpPost post = new HttpPost(this.mdhtR2Endpoint);
+		HttpPost post = new HttpPost(this.mdhtR3Endpoint);
+		if(cures) {
+			post = new HttpPost(this.mdhtR3Endpoint);
+		}
+		else {
+		   post = new HttpPost(this.mdhtR2Endpoint);
+		}
 		
 		ContentBody fileBody = new InputStreamBody(new ByteArrayInputStream(ccdaFile), "ccda");
 //		FileBody fileBody = new FileBody(ccdaFile);
@@ -133,6 +155,7 @@ final class TestCase1 extends TestCaseSender {
 		builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
 		builder.addTextBody("validationObjective", this.ccdaR2Type);
 		builder.addTextBody("referenceFileName", this.ccdaR2ReferenceFilename);
+		builder.addTextBody("curesUpdate", String.valueOf(cures));
 		builder.addPart("ccdaFile", fileBody);
 		HttpEntity entity = builder.build();
 		//

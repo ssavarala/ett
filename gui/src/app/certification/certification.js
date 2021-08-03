@@ -28,7 +28,7 @@ certMod.config(['$stateProvider',
                 views: {
                     "certification": {
                         controller: 'EdgeHomeCtrl',
-                        templateUrl: 'edge/edge-home/edge-home.tpl.html'
+                        templateUrl: 'certification/certification-home/certification-home.tpl.html'
                     }
                 }
             })
@@ -96,10 +96,13 @@ certMod.config(['$stateProvider',
     }
 ]);
 
-certMod.controller('CertificationCriteriaCtrl', ['$scope', 'PropertiesFactory',
-    function($scope, PropertiesFactory) {
+certMod.controller('CertificationCriteriaCtrl', ['$scope', 'PropertiesFactory','$rootScope',
+    function($scope, PropertiesFactory,$rootScope) {
         PropertiesFactory.get(function(result) {
             $scope.properties = result;
         });
+        $scope.toggleDisplayDiv = function() {
+			$rootScope.showmessage  = true;
+        };		
     }
 ]);

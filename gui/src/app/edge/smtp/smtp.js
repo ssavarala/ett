@@ -31,8 +31,8 @@ edgeSmtp.config(['$stateProvider',
 ]);
 
 
-edgeSmtp.controller('SmtpCtrl', ['$scope', 'LogInfo', 'SMTPTestCasesDescription', 'SMTPTestCases', '$q', '$timeout', '$window', 'SMTPProfileFactory', 'SMTPLogFactory', 'growl', '$state', '$uibModal', 'ApiUrl', 'DirectRICertFactory','$location','$anchorScroll','$interval',
-	function($scope, LogInfo, SMTPTestCasesDescription, SMTPTestCases, $q, $timeout, $window, SMTPProfileFactory, SMTPLogFactory, growl, $state, $uibModal, ApiUrl, DirectRICertFactory,$location,$anchorScroll,$interval) {
+edgeSmtp.controller('SmtpCtrl', ['$scope', 'LogInfo', 'SMTPTestCasesDescription', 'SMTPTestCases', '$q', '$timeout', '$window', 'SMTPProfileFactory', 'SMTPLogFactory', 'growl', '$state','ReplaceDomain', 'PropFactory','$uibModal', 'ApiUrl', 'DirectRICertFactory','$location','$anchorScroll','$interval',
+	function($scope,  LogInfo, SMTPTestCasesDescription, SMTPTestCases, $q, $timeout, $window, SMTPProfileFactory, SMTPLogFactory, growl, $state,ReplaceDomain, PropFactory,$uibModal, ApiUrl, DirectRICertFactory,$location,$anchorScroll,$interval) {
 
 		// Certificate upload
 		$scope.fileInfo = {
@@ -86,8 +86,14 @@ edgeSmtp.controller('SmtpCtrl', ['$scope', 'LogInfo', 'SMTPTestCasesDescription'
 		}
 		$scope.edgeProtocol = $state.current.data.protocol;
 
+
+		PropFactory.get(function(result) {
+			$scope.ettDomain = result.data;
+		});
+
 		SMTPTestCasesDescription.getTestCasesDescription(function(response) {
 			var result = response.data;
+
 
 			$scope.testingMode = result.testingMode;
 			angular.forEach(result.tests, function(test) {
@@ -95,6 +101,10 @@ edgeSmtp.controller('SmtpCtrl', ['$scope', 'LogInfo', 'SMTPTestCasesDescription'
 				test.testResult = [{
 					"criteriaMet": "NA"
 				}];
+
+
+               test = ReplaceDomain.getReplacedDomain(test,$scope.ettDomain);
+
 				// Check the protocol first
 				if (test.protocol === $scope.edgeProtocol) {
 					// Check the system edge or hisp
@@ -114,9 +124,13 @@ edgeSmtp.controller('SmtpCtrl', ['$scope', 'LogInfo', 'SMTPTestCasesDescription'
 			SMTPProfileFactory.query(function(data) {
 				if (data.length > 0) {
 					$scope.currentProfile = current || data[0];
+					if ($scope.currentProfile.useTLS === null){
+                        $scope.currentProfile.useTLS = true;
+					}
 				} else {
 					$scope.currentProfile = {};
 					$scope.currentProfile.profileName = "Default Profile";
+					$scope.currentProfile.useTLS = true;
 				}
 				$scope.profileList = data;
 			});
@@ -173,6 +187,7 @@ edgeSmtp.controller('SmtpCtrl', ['$scope', 'LogInfo', 'SMTPTestCasesDescription'
 			$scope.currentProfile.sutEmailAddress = "";
 			$scope.currentProfile.sutUsername = "";
 			$scope.currentProfile.sutPassword = "";
+			$scope.currentProfile.useTLS = true;
 			$scope.currentProfile.profileName = "Default Profile " + $scope.profileList.length;
 			$scope.refreshProfile($scope.currentProfile);
 		};
@@ -215,6 +230,7 @@ edgeSmtp.controller('SmtpCtrl', ['$scope', 'LogInfo', 'SMTPTestCasesDescription'
 			var ccdaReferenceFilename = "";
 			var ccdaValidationObjective = "";
 			var fileLink = "";
+			var curesValidator = false;
 			if (test.ccdaFileRequired && (!fieldInput.ccdaDocument)){
 				throw {
 					code: "Error",
@@ -226,6 +242,7 @@ edgeSmtp.controller('SmtpCtrl', ['$scope', 'LogInfo', 'SMTPTestCasesDescription'
 				ccdaReferenceFilename = fieldInput.ccdaDocument.name || "";
 				fileLink = fieldInput.ccdaDocument.link || "";
 				ccdaValidationObjective = fieldInput.ccdaDocument.path[fieldInput.ccdaDocument.path.length - 1] || "";
+				curesValidator = fieldInput.ccdaDocument.cures;
 			}
 
 			var previousTR = null;
@@ -245,7 +262,7 @@ edgeSmtp.controller('SmtpCtrl', ['$scope', 'LogInfo', 'SMTPTestCasesDescription'
 				"tttSmtpPort": $scope.tttSmtpPort,
 				"sutEmailAddress": $scope.currentProfile.sutEmailAddress,
 				"tttEmailAddress": $scope.tttEmailAddress,
-				"useTLS": true,
+				"useTLS": $scope.currentProfile.useTLS,
 				"sutCommandTimeoutInSeconds": fieldInput.sutCommandTimeoutInSeconds,
 				"sutUserName": $scope.currentProfile.sutUsername,
 				"sutPassword": $scope.currentProfile.sutPassword,
@@ -258,7 +275,7 @@ edgeSmtp.controller('SmtpCtrl', ['$scope', 'LogInfo', 'SMTPTestCasesDescription'
 				"ccdaReferenceFilename": ccdaReferenceFilename,
 				"ccdaValidationObjective": ccdaValidationObjective,
 				"ccdaFileLink": fileLink,
-				"previousResult": previousTR || null
+				"previousResult": previousTR,"cures":curesValidator || null
 			};
 
 			// Set status to loading for loading UI
@@ -277,6 +294,8 @@ edgeSmtp.controller('SmtpCtrl', ['$scope', 'LogInfo', 'SMTPTestCasesDescription'
 						test.status = 'manual';
 					} else if (res.criteriaMet === 'STEP2') {
 						test.status = 'fetching';
+					} else if (res.criteriaMet === 'RETRY') {
+						test.status = 'retry';
 					}
 				});
 

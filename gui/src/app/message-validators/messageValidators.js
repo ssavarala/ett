@@ -1,8 +1,10 @@
 var validators = angular.module('ttt.validators', [
     // Modules
+    'ttt.direct.ccdar3Validator',
     'ttt.direct.ccdar2Validator',
     'ttt.direct.ccdaValidator',
-    'ttt.direct.xdmValidator'
+    'ttt.direct.xdmValidator',
+    'ttt.validator.home'
 ]);
 
 validators.config(['$stateProvider',
@@ -24,11 +26,29 @@ validators.config(['$stateProvider',
                 }
             })
             .state('validators.ccdar2', {
-                url: '',
+                url: '/ccdar2',
                 views: {
                     "validators": {
                         controller: 'CCDAR2ValidatorCtrl',
                         templateUrl: 'direct/message-validator/ccda-r2/ccda-r2.tpl.html'
+                    }
+                }
+            })
+            .state('validators.ccdar3', {
+                url: '/ccdar3',
+                views: {
+                    "validators": {
+                        controller: 'CCDAR3ValidatorCtrl',
+                        templateUrl: 'direct/message-validator/ccda-r3/ccda-r3.tpl.html'
+                    }
+                }
+            })
+            .state('validators.home', {
+                url: '',
+                views: {
+                    "validators": {
+                        controller: 'EdgeHomeCtrl',
+                        templateUrl: 'message-validators/validator-home/validator-home.tpl.html'
                     }
                 }
             })
@@ -120,8 +140,8 @@ validators.config(['$stateProvider',
     }
 ]);
 
-validators.controller('MessageValidatorsCtrl', ['$scope', '$stateParams', 'SettingsFactory', 'PropertiesFactory',
-    function($scope,$stateParams, SettingsFactory, PropertiesFactory) {
+validators.controller('MessageValidatorsCtrl', ['$scope', '$stateParams', 'SettingsFactory', 'PropertiesFactory','$rootScope',
+    function($scope,$stateParams, SettingsFactory, PropertiesFactory, $rootScope) {
     $scope.paramsObj =  $stateParams.paramsObj;
 
 		$scope.backTo = null;
@@ -139,6 +159,8 @@ validators.controller('MessageValidatorsCtrl', ['$scope', '$stateParams', 'Setti
         PropertiesFactory.get(function(result) {
             $scope.properties = result;
         });
-
+        $scope.toggleDisplayDiv = function() {
+			$rootScope.showmessage  = true;
+        };
     }
 ]);

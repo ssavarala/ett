@@ -77,10 +77,15 @@ public class ValidationReportController {
 			String rawContent = partRes.getRawMessage();
 			InputStream contentStream;
 			
-			if(partRes.getContentType().contains("application/zip")) {
+			if(partRes.getContentType().contains("application/zip") ||
+			partRes.getContentType().contains("application/x-zip-compressed") ||
+			partRes.getContentType().contains("application/octet-stream") ||
+			partRes.getContentType().contains("application/pdf")) {
 				InputStream tmpZip = new ByteArrayInputStream(rawContent.getBytes(StandardCharsets.UTF_8));
 				MimeBodyPart zipPart = new MimeBodyPart(tmpZip);
 				contentStream = zipPart.getInputStream();
+			} else if(partRes.getContentType().contains("application/xml")) {
+				contentStream = new MimeBodyPart(new ByteArrayInputStream(rawContent.getBytes(StandardCharsets.UTF_8))).getInputStream();
 			} else {
 				contentStream = new ByteArrayInputStream(rawContent.getBytes(StandardCharsets.UTF_8));
 			}
@@ -94,7 +99,7 @@ public class ValidationReportController {
 				headerValue = String.format(partRes.getContentDisposition());
 			}
 			response.setHeader(headerKey, headerValue);
-
+	
 			// writes the file to the client
 			IOUtils.copy(contentStream, response.getOutputStream());
 

@@ -6,6 +6,8 @@ var direct = angular.module('ttt.direct', [
 	'ttt.direct.validator',
 	'ttt.direct.ccdaValidator',
 	'ttt.direct.ccdar2Validator',
+	'ttt.direct.ccdar3Validator',
+	'ttt.direct.dcdtValidator',
 	'ttt.direct.status',
 	'ttt.direct.report',
 	'ttt.direct.help'
@@ -83,6 +85,38 @@ direct.config(['$stateProvider',
 					}
 				}
 			})
+			.state('direct.ccdar3', {
+				url: '/validator/ccda/r3',
+				views: {
+					"direct": {
+						controller: 'CCDAR3ValidatorCtrl',
+						templateUrl: 'direct/message-validator/ccda-r3/ccda-r3.tpl.html'
+					}
+				}
+			})			.state('direct.dcdt1', {
+				url: '/certdiscovery/dcdt1',
+				views: {
+					"direct": {
+						controller: 'DCDTValidatorCtrl',
+						templateUrl: 'direct/cert-discovery/dcdt.tpl.html'
+					}
+				},
+                data: {
+                    pageTitle:'2014'
+                }
+			})
+			.state('direct.dcdt2', {
+				url: '/certdiscovery/dcdt2',
+				views: {
+					"direct": {
+						controller: 'DCDTValidatorCtrl',
+						templateUrl: 'direct/cert-discovery/dcdt.tpl.html'
+					}
+				},
+                data: {
+                    pageTitle:'2015'
+                }
+			})
 			.state('direct.status', {
 				url: '/status',
 				views: {
@@ -140,8 +174,8 @@ direct.config(['$stateProvider',
 	}
 ]);
 
-direct.controller('DirectCtrl', ['$scope', '$stateParams', 'SettingsFactory', 'PropertiesFactory',
-	function($scope, $stateParams, SettingsFactory, PropertiesFactory) {
+direct.controller('DirectCtrl', ['$scope', '$stateParams', 'SettingsFactory', 'PropertiesFactory','$rootScope',
+	function($scope, $stateParams, SettingsFactory, PropertiesFactory, $rootScope) {
     $scope.paramsObj =  $stateParams.paramsObj;
 		$scope.backTo = null;
 		if ($stateParams.paramsObj !=null){
@@ -158,6 +192,8 @@ direct.controller('DirectCtrl', ['$scope', '$stateParams', 'SettingsFactory', 'P
 		PropertiesFactory.get(function(result) {
 			$scope.properties = result;
 		});
-
+        $scope.toggleDisplayDiv = function() {
+			$rootScope.showmessage  = true;
+        };
    }
 ]);

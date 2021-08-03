@@ -30,8 +30,8 @@ certCerth1.config(['$stateProvider',
 	}
 ]);
 
-certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl','SMTPLogFactory','ApiUrl','SMTPTestCasesDescription','CriteriaDescription','SMTPTestCases','XDRTestCasesTemplate','XDRTestCases','XDRRunTestCases','SMTPProfileFactory','SettingsFactory', 'PropertiesFactory',  '$timeout','$window','CCDADocumentsFactory', 'DirectRICertFactory','DirectCertsLinkFactory','$filter','$state','$location','$anchorScroll',
-	function($scope, $stateParams, LogInfo,growl,SMTPLogFactory, ApiUrl,SMTPTestCasesDescription,CriteriaDescription,SMTPTestCases,XDRTestCasesTemplate,XDRTestCases,XDRRunTestCases,SMTPProfileFactory,SettingsFactory, PropertiesFactory, $timeout,$window,CCDADocumentsFactory, DirectRICertFactory,DirectCertsLinkFactory,$filter, $state,$location,$anchorScroll) {
+certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl','SMTPLogFactory','ApiUrl','SMTPTestCasesDescription','CriteriaDescription','SMTPTestCases','XDRTestCasesTemplate','XDRTestCases','XDRRunTestCases','SMTPProfileFactory','SettingsFactory', 'PropertiesFactory',  '$timeout','$window','CCDADocumentsFactory', 'DirectRICertFactory','DirectCertsLinkFactory','$filter','$state','ReplaceDomain','PropFactory','$uibModal','$location','$anchorScroll','XDRCheckStatus',
+	function($scope, $stateParams, LogInfo,growl,SMTPLogFactory, ApiUrl,SMTPTestCasesDescription,CriteriaDescription,SMTPTestCases,XDRTestCasesTemplate,XDRTestCases,XDRRunTestCases,SMTPProfileFactory,SettingsFactory, PropertiesFactory, $timeout,$window,CCDADocumentsFactory, DirectRICertFactory,DirectCertsLinkFactory,$filter, $state,ReplaceDomain,PropFactory,$uibModal,$location,$anchorScroll,XDRCheckStatus) {
          $scope.paramCri =  $stateParams.paramCri;
          $scope.pageTitle= $state.current.data.pageTitle;
 		$scope.filterCrit = $state.current.data.filterCrit;
@@ -44,6 +44,7 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 		$scope.criterFilterObj = [];
 		$scope.criteriaSelection  = null;
 		$scope.isXdrTest = false;
+		$scope.protocol = "SMTP";
 		$scope.testSystem = "certification";
 		$scope.viewObj = "certh1";
 		$scope.edgeProtocol = "certh1";
@@ -54,6 +55,21 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 			$scope.edgeProtocol = "certh1";
 			$scope.viewObj = "certh1";
 		}
+		if ($scope.filterCrit == "su1"){
+			$scope.edgeProtocol = "surveilb1";
+			$scope.viewObj = "surveilb1";
+			$scope.testSystem = "surveillance";
+		}
+		if ($scope.filterCrit == "sa1"){
+			$scope.edgeProtocol = "surveilh1";
+			$scope.viewObj = "surveilh1";
+			$scope.testSystem = "surveillance";
+		}
+		if ($scope.filterCrit == "sc2"){
+			$scope.edgeProtocol = "surveilh2";
+			$scope.viewObj = "surveilh2";
+			$scope.testSystem = "surveillance";
+		}
 		if ($scope.filterCrit == "h2"){
 			$scope.edgeProtocol = "certh2";
 			$scope.viewObj = "certh2";
@@ -62,10 +78,14 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 			$scope.edgeProtocol = "certb1";
 			$scope.viewObj = "certb1";
 		}
+		PropFactory.get(function(result) {
+			$scope.ettDomain = result.data;
+		});
 
 		XDRTestCasesTemplate.getTestCasesDescription(function(response) {
 			var result = response.data;
 			angular.forEach(result, function(test) {
+               test = ReplaceDomain.getReplacedDomain(test,$scope.ettDomain);
 				if (!test.status) {
 					test.status = 'na';
 				} else if(test.status === 'configure') {
@@ -152,28 +172,29 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 				test.testResult = [{
 					"criteriaMet": "NA"
 				}];
-					$scope.smtpTests.push(test);
+                test = ReplaceDomain.getReplacedDomain(test,$scope.ettDomain);
+				$scope.smtpTests.push(test);
 			});
 		});
 
            $scope.firstCriteriaSelection= [
-            {  name: "All", testList:['h2'],selectOption:'ALL'},
-            {  name: "Setup", testList:['h2'],selectOption:'A'},
-            {  name: "Send", testList:['h2'],selectOption:'B'},
-            {  name: "Send - Delivery Notification for Direct", testList:['h2'],selectOption:'9'},
-            {  name: "Send using Direct+XDM", testList:['h2'],selectOption:'2'},
-            {  name: "Send using SOAP+XDR", testList:['h2'],selectOption:'3'},
-            {  name: "Send using Edge Protocol",testList:['h2'],selectOption:'4'},
-            {  name: "Receive", testList:['h2'],selectOption:'5'},
-            {  name: "Receive - Delivery Notification in Direct",testList:['h2'],selectOption:'10'},
-            {  name: "Receive using Direct+XDM",testList:['h2'],selectOption:'6'},
-            {  name: "Receive using SOAP+XDR",testList:['h2'],selectOption:'7'},
-            {  name: "Receive using Edge Protocol",testList:['h2'],selectOption:'8'}
+            {  name: "All", testList:['h2','sc2'],selectOption:'ALL'},
+            {  name: "Setup", testList:['h2','sc2'],selectOption:'A'},
+            {  name: "Send", testList:['h2','sc2'],selectOption:'B'},
+            {  name: "Send - Delivery Notification for Direct", testList:['h2','sc2'],selectOption:'9'},
+            {  name: "Send using Direct+XDM", testList:['h2','sc2'],selectOption:'2'},
+            {  name: "Send conversion XDR", testList:['h2','sc2'],selectOption:'3'},
+            {  name: "Send using Edge Protocol",testList:['h2','sc2'],selectOption:'4'},
+            {  name: "Receive", testList:['h2','sc2'],selectOption:'5'},
+            {  name: "Receive - Delivery Notification in Direct",testList:['h2','sc2'],selectOption:'10'},
+            {  name: "Receive using Direct+XDM",testList:['h2','sc2'],selectOption:'6'},
+            {  name: "Receive conversion XDR",testList:['h2','sc2'],selectOption:'7'},
+            {  name: "Receive using Edge Protocol",testList:['h2','sc2'],selectOption:'8'}
             ];
 
            $scope.secondCriteriaSelection= [
-            {  name: "Direct", testList:['h2'],selectOption:'ALL'},
-            {  name: "Edge", testList:['h2'],selectOption:'1'}
+            {  name: "Direct", testList:['h2','sc2'],selectOption:'ALL'},
+            {  name: "Edge", testList:['h2','sc2'],selectOption:'1'}
             ];
             });
 
@@ -200,7 +221,11 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
                  $scope.uploadOption = selectedItem.uploadOption;
                  $scope.isXdrTest = selectedItem.xdrTest;
                  $scope.redirectLink = selectedItem.redirect;
+                 $scope.protocol = selectedItem.protocol;
                  $scope.openInNewWindow = "";
+                 if ($scope.protocol == "MT"){
+                     $scope.protocol = "";
+                 }
                  if ($scope.isXdrTest){
                      $scope.testchange = $filter('filter')($scope.xdrTests, {criteria: selectedItem.criteria});
                  }else{
@@ -247,9 +272,13 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 			SMTPProfileFactory.query(function(data) {
 				if (data.length > 0) {
 					$scope.currentProfile = current || data[0];
+                    if ($scope.currentProfile.useTLS === null){
+                        $scope.currentProfile.useTLS = true;
+                    }
 				} else {
 					$scope.currentProfile = {};
 					$scope.currentProfile.profileName = "Default Profile";
+					$scope.currentProfile.useTLS = true;
 				}
 				$scope.profileList = data;
 			});
@@ -261,11 +290,12 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 			$scope.currentProfile = profile;
 		};
 
-		$scope.reset = function() {
+		$scope.resetProfile = function() {
 			$scope.currentProfile.sutSMTPAddress = "";
 			$scope.currentProfile.sutEmailAddress = "";
 			$scope.currentProfile.sutUsername = "";
 			$scope.currentProfile.sutPassword = "";
+			$scope.currentProfile.useTLS = true;
 			$scope.currentProfile.profileName = "Default Profile " + $scope.profileList.length;
 			$scope.refreshProfile($scope.currentProfile);
 		};
@@ -297,12 +327,17 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 				};
 			});
 		};
+		$scope.validateManual = function(test, validation) {
+			test.status = validation;
+			$scope.logTestData(test);
+		};
 
 		$scope.startTest = function(test, fieldInput) {
 			// Get CCDA R2 validation objectives if exists
 			var ccdaReferenceFilename = "";
 			var ccdaValidationObjective = "";
 			var fileLink = "";
+			var curesValidator = false;
 			if (test.ccdaFileRequired && (!fieldInput.ccdaDocument)){
 				throw {
 					code: "Error",
@@ -314,6 +349,7 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 				ccdaReferenceFilename = fieldInput.ccdaDocument.name || "";
 				fileLink = fieldInput.ccdaDocument.link || "";
 				ccdaValidationObjective = fieldInput.ccdaDocument.path[fieldInput.ccdaDocument.path.length - 1] || "";
+				curesValidator = fieldInput.ccdaDocument.cures;
 			}
 
 			var previousTR = null;
@@ -333,7 +369,7 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 				"tttSmtpPort": $scope.tttSmtpPort,
 				"sutEmailAddress": $scope.currentProfile.sutEmailAddress,
 				"tttEmailAddress": $scope.tttEmailAddress,
-				"useTLS": true,
+				"useTLS": $scope.currentProfile.useTLS,
 				"sutCommandTimeoutInSeconds": fieldInput.sutCommandTimeoutInSeconds,
 				"sutUserName": $scope.currentProfile.sutUsername,
 				"sutPassword": $scope.currentProfile.sutPassword,
@@ -346,7 +382,7 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 				"ccdaReferenceFilename": ccdaReferenceFilename,
 				"ccdaValidationObjective": ccdaValidationObjective,
 				"ccdaFileLink": fileLink,
-				"previousResult": previousTR || null
+				"previousResult": previousTR,"cures":curesValidator || null
 			};
 
 			// Set status to loading for loading UI
@@ -365,6 +401,8 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 						test.status = 'manual';
 					} else if (res.criteriaMet === 'STEP2') {
 						test.status = 'fetching';
+					} else if (res.criteriaMet === 'RETRY') {
+						test.status = 'retry';
 					}
 				});
 				$scope.logTestData(test);
@@ -437,6 +475,35 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 			});
 		};
 
+		$scope.openCcdaValidationReport = function(key, report) {
+			var modalInstance = $uibModal.open({
+				templateUrl: 'CCDAModalContent.html',
+				controller: 'CCDAModalReportCtrl',
+				size: 'lg',
+				backdrop: true,
+				windowClass: 'ccda-modal',
+				resolve: {
+					report: function() {
+						return report;
+					},
+					key: function() {
+						return key;
+					}
+				}
+			});
+		};
+
+		$scope.validateXdr = function(test, validation) {
+			test.status = validation;
+		};
+
+		$scope.reset = function(test) {
+			console.log("inside reset for xdr......");
+			if (!test.results.$resolved) {
+				test.results.cancel();
+			}
+			test.status = 'na';
+		};
 
 		$scope.runXdr = function(test) {
 			test.status = "loading";
@@ -452,7 +519,11 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 					if (data.content.criteriaMet.toLowerCase() === 'pending') {
 						test.status = "pending";
 						if(data.content) {
-							test.endpoint = data.content.value.endpoint;
+							if (data.message ==="ran tc 7" || data.message ==="ran tc 17"){
+								test.endpoint = "https://"+data.content.value.endpoint;
+							}else{
+								test.endpoint = data.content.value.endpoint;
+							}
 							test.endpointTLS = data.content.value.endpointTLS;
 						}
 					} else if (data.content.criteriaMet.toLowerCase() === 'manual') {
@@ -476,6 +547,35 @@ certCerth1.controller('Certh1Ctrl', ['$scope', '$stateParams','LogInfo','growl',
 				}
 			}, function(data) {
 				test.status = 'error';
+				if (data.data) {
+					throw {
+						code: data.data.code,
+						url: data.data.url,
+						message: data.data.message
+					};
+				}
+			});
+		};
+
+		$scope.checkXdrStatus = function(test) {
+			test.status = "loading";
+			test.results = XDRCheckStatus.checkStatus({
+				id: test.id
+			}, function(data) {
+				test.results = data;
+				if (data.content.criteriaMet.toLowerCase() === "passed") {
+					test.status = "success";
+				} else if (data.content.criteriaMet.toLowerCase() === "failed") {
+					test.status = "error";
+				} else if (data.content.criteriaMet.toLowerCase() === "pending") {
+					test.status = "pending";
+				} else if (data.content.criteriaMet.toLowerCase() === "manual") {
+					test.status = "manual";
+				} else {
+					test.status = "error";
+				}
+			}, function(data) {
+				test.status = "error";
 				if (data.data) {
 					throw {
 						code: data.data.code,

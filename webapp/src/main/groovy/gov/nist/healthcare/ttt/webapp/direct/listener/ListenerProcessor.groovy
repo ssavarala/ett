@@ -105,7 +105,7 @@ public class ListenerProcessor implements Runnable {
 			'noaddressfailure9', 'goodaddress-plain',
 			'processedonly5-plain', 'processdelayeddispatch30min', 'processeddispatched6-plain', 'noaddressfailure9-plain', 'dispatchedonly-plain',
 			'white_space_mdn', 'extra_line_break_mdn', 'extra_space_disposition', 'missing_disposition', 'null_sender',
-			'different_sender', 'different_msgid', 'white_space_822', 'different_cases_822', 'dsn', 'processedfailuretest']
+			'different_sender', 'different_msgid', 'white_space_822', 'different_cases_822', 'dsn', 'processedfailuretest', 'processedfailure','processedtimeoutfailure']
 
 		String smtpFrom = directTo?.get(0)
 		logger.info("To " + smtpFrom)
@@ -196,6 +196,9 @@ public class ListenerProcessor implements Runnable {
 				// }
 				// }
 				// }
+			} else if (directTo[0].startsWith("r2_")) {
+				logger.warn("r2 validation endpoints not supported from 2.1.1")
+				return
 			}
 
 			// ccdaType tells us the document type to validate against
@@ -232,11 +235,13 @@ public class ListenerProcessor implements Runnable {
 			// If it's an MDN update the status to MDN RECEIVED
 			if(processor.isMdn()) {
 				// Check if message not already timed out
-				if(db.getLogFacade().getLogByMessageId(processor.getOriginalMessageId()).getStatus().equals(Status.WAITING)) {
-					logger.info("Updating MDN status to MDN_RECEIVED for message " + processor.getOriginalMessageId());
-					db.getLogFacade().updateStatus(processor.getOriginalMessageId(), Status.MDN_RECEIVED);
-				} else {
-					logger.info("Not Updating MDN status because message already timed out " + processor.getOriginalMessageId());
+				if(db.getLogFacade().getLogByMessageId(processor.getOriginalMessageId()) != null) {
+					if(db.getLogFacade().getLogByMessageId(processor.getOriginalMessageId()).getStatus().equals(Status.WAITING)) {
+						logger.info("Updating MDN status to MDN_RECEIVED for message " + processor.getOriginalMessageId());
+						db.getLogFacade().updateStatus(processor.getOriginalMessageId(), Status.MDN_RECEIVED);
+					} else {
+						logger.info("Not Updating MDN status because message already timed out " + processor.getOriginalMessageId());
+					}
 				}
 			}
 
@@ -849,18 +854,18 @@ public class ListenerProcessor implements Runnable {
 			case 'processedfailure':
 				logger.info("Found address $smtpFrom for XDR. Sending processed MDN and failure MDN")
 				EncryptedSmtpMDNMessageGenerator.sendSmtpMDN(message, originalMsgId, from, to, 'processed', '', getSigningPrivateCert(), this.certPassword, MDNType.GOOD)
-				EncryptedSmtpMDNMessageGenerator.sendSmtpMDN(message, originalMsgId, from, to, 'failure', 'Failure MDN', getSigningPrivateCert(), this.certPassword, MDNType.GOOD)
+				EncryptedSmtpMDNMessageGenerator.sendSmtpMDN(message, originalMsgId, from, to, 'failed', 'Failure MDN', getSigningPrivateCert(), this.certPassword, MDNType.GOOD)
 				break
 
 			case 'processedtimeoutfailure':
 				logger.info("Found address $smtpFrom for XDR. Sending processed MDN and failure MDN")
 				EncryptedSmtpMDNMessageGenerator.sendSmtpMDN(message, originalMsgId, from, to, 'processed', '', getSigningPrivateCert(), this.certPassword, MDNType.GOOD)
 				this.sleep(3900000);
-				EncryptedSmtpMDNMessageGenerator.sendSmtpMDN(message, originalMsgId, from, to, 'failure', 'Failure MDN', getSigningPrivateCert(), this.certPassword, MDNType.GOOD)
+				EncryptedSmtpMDNMessageGenerator.sendSmtpMDN(message, originalMsgId, from, to, 'failed', 'Failure MDN', getSigningPrivateCert(), this.certPassword, MDNType.GOOD)
 				break
 
 			case 'noaddressfailure9':
-				EncryptedSmtpMDNMessageGenerator.sendSmtpMDN(message, originalMsgId, from, to, 'failure', 'Failure MDN', getSigningPrivateCert(), this.certPassword, MDNType.GOOD)
+				EncryptedSmtpMDNMessageGenerator.sendSmtpMDN(message, originalMsgId, from, to, 'failed', 'Failure MDN', getSigningPrivateCert(), this.certPassword, MDNType.GOOD)
 				break
 
 			case 'processedonly5-plain':
@@ -894,7 +899,7 @@ public class ListenerProcessor implements Runnable {
 				}
 				break
 			case 'noaddressfailure9-plain':
-				SmtpMDNMessageGenerator.sendSmtpMDN(message, originalMsgId, from, to, 'failure', 'Failure MDN', getSigningPrivateCert(), this.certPassword, true)
+				SmtpMDNMessageGenerator.sendSmtpMDN(message, originalMsgId, from, to, 'failed', 'Failure MDN', getSigningPrivateCert(), this.certPassword, true)
 				break
 
 			case 'white_space_mdn':
@@ -933,9 +938,9 @@ public class ListenerProcessor implements Runnable {
 				EncryptedSmtpMDNMessageGenerator.sendSmtpMDN(message, originalMsgId, from, to, 'processed', '', getSigningPrivateCert(), this.certPassword, MDNType.DIFF_CASES_822)
 				break
 
-			case 'dsn':
+			/*case 'dsn':
 				EncryptedSmtpMDNMessageGenerator.sendSmtpMDN(message, originalMsgId, from, to, 'processed', '', getSigningPrivateCert(), this.certPassword, MDNType.DSN)
-				break
+				break*/
 
 			default:
 				logger.info("Could not intepret the address $smtpFrom")

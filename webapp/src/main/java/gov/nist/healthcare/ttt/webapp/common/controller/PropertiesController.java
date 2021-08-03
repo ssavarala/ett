@@ -36,8 +36,18 @@ public class PropertiesController {
 	@Value("${ttt.version}")
 	String version = "1.0";
 
+	@Value("${ett.dcdt.2014.hosting.url}")
+	String dcdt2014Url = "";
 
+	@Value("${ett.dcdt.2015.hosting.url}")
+	String dcdt2015Url = "";
 
+	@Value("${github.download.zip}")
+	String githubZip = "";
+	
+	@Value("${github.cures.download.zip}")
+	String githubCuresZip = "";
+	
 	@RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody HashMap<String, String> getProperties() throws IOException {
     	HashMap<String, String> prop = new HashMap<String, String>();
@@ -48,6 +58,14 @@ public class PropertiesController {
 				properties.load(in);
 				version = (String)properties.get("ttt.version");
 				lastUpdated = (String)properties.get("ttt.lastUpdated");
+				URL aURL = new URL(dcdt2014Url);
+		    	prop.put("dcdt2014domain", aURL.getHost());
+		    	prop.put("dcdt2014Protocol", aURL.getProtocol());
+		    	aURL = new URL(dcdt2015Url);
+		    	prop.put("dcdt2015domain", aURL.getHost());
+		    	prop.put("dcdt2015Protocol", aURL.getProtocol());
+				prop.put("githubZip",githubZip);
+				prop.put("githubCuresZip", githubCuresZip);
 			}
 		} catch (FileNotFoundException fnfe) {
 			logger.info(fnfe.getMessage());
@@ -56,6 +74,7 @@ public class PropertiesController {
     	prop.put("domainName", domainName);
     	prop.put("lastUpdated", lastUpdated);
     	prop.put("version", version);
+
     	return prop;
     }
 

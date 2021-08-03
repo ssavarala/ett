@@ -79,6 +79,41 @@ import com.sun.mail.pop3.POP3Folder;
 public class TTTReceiverTests {
 
 	public static Logger log = Logger.getLogger("TTTReceiverTests");
+	
+	public Properties getImapProps(TestInput ti) {
+		Properties props = new Properties();
+		if(ti.useTLS){
+			props.put("mail.imap.starttls.enable", true);
+			props.put("mail.imap.starttls.required", true);
+			props.put("mail.imap.sasl.enable", true);
+			props.put("mail.imap.sasl.mechanisms", "PLAIN LOGIN");
+			props.put("mail.imap.ssl.trust", "*");
+		}
+		
+		if(ti.sutUserName.equals("red") && ti.sutPassword.equals("red")){
+			props.put("mail.imap.sasl.enable", false);
+		}
+
+		else {
+			props.put("mail.imap.sasl.enable", false);
+		}
+
+		return props;
+
+	}
+	
+	public Properties getPopProps(TestInput ti) {
+		Properties props = new Properties();
+		if(ti.useTLS){
+			props.put("mail.pop3.starttls.enable", true);
+			props.put("mail.pop3.starttls.required", true);
+			props.put("mail.pop3.ssl.trust", "*");
+		}
+		
+
+		return props;
+
+	}
 
 	/*
 	 * Fetches a unread mail from the inbox. The mail is set as read after it's
@@ -137,7 +172,7 @@ public class TTTReceiverTests {
 						}
 
 						result.put("\n" + "Delivered-To", "********" + "\n");
-
+						inbox.setFlags(new Message[] {message}, new Flags(Flags.Flag.SEEN), true);
 						// Storing the Message Body Parts
 						if(message.getContent() instanceof Multipart){
 							Multipart multipart = (Multipart) message.getContent();
@@ -148,7 +183,7 @@ public class TTTReceiverTests {
 
 
 								byte[] targetArray = IOUtils.toByteArray(stream);
-								System.out.println(new String(targetArray));
+							//	System.out.println(new String(targetArray));
 								int m = i + 1;
 								if (bodyPart.getFileName() != null) {
 									bodyparts.put(bodyPart.getFileName(), new String(
@@ -159,7 +194,15 @@ public class TTTReceiverTests {
 										CloseableHttpClient client = HttpClients.createDefault();
 										FileUtils.writeByteArrayToFile(new File("sample.xml"), targetArray);
 										File file1 = new File("sample.xml");
-										HttpPost post = new HttpPost(prop.getProperty("ett.mdht.r2.url"));
+										HttpPost post = new HttpPost(prop.getProperty("ett.mdht.r3.url"));
+										if(ti.cures) {
+										post = new HttpPost(prop.getProperty("ett.mdht.r3.url"));
+										System.out.println("Calling CURES validator");
+										}
+										else {
+										post = new HttpPost(prop.getProperty("ett.mdht.r2.url"));
+										System.out.println("Calling NON-CURES validator");
+										}
 										FileBody fileBody = new FileBody(file1);
 
 
@@ -539,7 +582,7 @@ public class TTTReceiverTests {
 			}
 
 			if (result.size() == 0) {
-				tr.setCriteriamet(CriteriaStatus.FALSE);
+				tr.setCriteriamet(CriteriaStatus.RETRY);
 				result.put(
 						"\nERROR",
 						"No messages found! Send a message and try again.\nPlease make sure that the vendor email address is entered correctly and matches the email address from which the email is being sent.");
@@ -601,7 +644,7 @@ public class TTTReceiverTests {
 				props1.put("mail.smtp.auth", "true");
 				props1.put("mail.smtp.starttls.enable","true");
 				props1.put("mail.smtp.starttls.required", "true");
-				props1.put("mail.smtp.auth.mechanisms", "PLAIN");
+				props1.put("mail.smtp.auth.mechanisms", "PLAIN LOGIN");
 				props1.setProperty("mail.smtp.ssl.trust", "*");
 
 				Session session1 = Session.getInstance(props1, null);
@@ -663,13 +706,8 @@ public class TTTReceiverTests {
 		TestResult tr = new TestResult();
 		HashMap<String, String> result = tr.getTestRequestResponses();
 		HashMap<String, String> bodyparts = tr.getAttachments();
-		Properties props = new Properties();
-		props.put("mail.imap.starttls.enable", true);
-		props.put("mail.imap.starttls.required", true);
-		props.put("mail.imap.sasl.enable", true);
-		props.put("mail.imap.sasl.mechanisms", "PLAIN");
-		props.put("mail.imap.ssl.trust", "*");
-
+		Properties props = getImapProps(ti);
+		System.out.println("UseTLS-->"+ti.useTLS);
 		try {
 			Session session = Session.getDefaultInstance(props, null);
 			Store store = session.getStore("imap");
@@ -750,178 +788,7 @@ public class TTTReceiverTests {
 		return tr;
 	}
 
-	/*
-	 * Fecthes an email from inbox. Connects to the IMAP server using MD5 cipher
-	 * suite.
-	 */
-	public TestResult imapFetch13(TestInput ti) throws IOException {
-		System.setProperty("java.net.preferIPv4Stack", "true");
-		TestResult tr = new TestResult();
-		HashMap<String, String> result = tr.getTestRequestResponses();
-		HashMap<String, String> bodyparts = tr.getAttachments();
-		Properties props = new Properties();
-		props.put("mail.imap.starttls.enable", true);
-		props.put("mail.imap.starttls.required", true);
-		props.put("mail.imap.ssl.ciphersuites", "TLS_RSA_WITH_RC4_128_MD5");
-		props.put("mail.imap.sasl.enable", true);
-		props.put("mail.imap.sasl.mechanisms", "PLAIN");
-		props.put("mail.imap.ssl.trust", "*");
-
-		try {
-			Session session = Session.getDefaultInstance(props, null);
-			Store store = session.getStore("imap");
-			// store.connect(ti.sutSmtpAddress,110,ti.sutUserName,ti.sutPassword);
-			store.connect(ti.sutSmtpAddress, 143, ti.sutUserName,
-					ti.sutPassword);
-
-			IMAPFolder inbox = (IMAPFolder) store.getFolder("Inbox");
-			inbox.open(Folder.READ_WRITE);
-
-			Flags seen = new Flags(Flags.Flag.SEEN);
-			FlagTerm unseenFlagTerm = new FlagTerm(seen, false);
-			Message messages[] = inbox.search(unseenFlagTerm);
-
-			for (Message message : messages) {
-				long a = inbox.getUID(message);
-				String strLong = Long.toString(a);
-				Address[] froms = message.getFrom();
-				String sender_ = froms == null ? ""
-						: ((InternetAddress) froms[0]).getAddress();
-
-				// j++;
-				// Store all the headers in a map
-				Enumeration headers = message.getAllHeaders();
-				while (headers.hasMoreElements()) {
-					Header h = (Header) headers.nextElement();
-					// result.put(h.getName() + " " + "[" + j +"]",
-					// h.getValue());
-					result.put("\n" + h.getName(), h.getValue() + "\n");
-
-				}
-
-				// result.put("Delivered-To", "********");
-				result.put("\nUID", strLong);
-				Multipart multipart = (Multipart) message.getContent();
-				for (int i = 0; i < multipart.getCount(); i++) {
-					BodyPart bodyPart = multipart.getBodyPart(i);
-					InputStream stream = bodyPart.getInputStream();
-
-					byte[] targetArray = IOUtils.toByteArray(stream);
-					System.out.println(new String(targetArray));
-					int m = i + 1;
-					bodyparts.put("bodyPart" + " " + "[" + m + "]", new String(
-							targetArray));
-
-				}
-				store.close();
-
-			}
-			if (bodyparts.isEmpty()) {
-				tr.setCriteriamet(CriteriaStatus.FALSE);
-				tr.getTestRequestResponses().put("\nERROR",
-						"No messages found. Send a message and try again.");
-			} else {
-				tr.setCriteriamet(CriteriaStatus.TRUE);
-			}
-
-		} catch (MessagingException e) {
-
-			tr.setCriteriamet(CriteriaStatus.FALSE);
-			e.printStackTrace();
-			log.info("Error fetching email " + e.getLocalizedMessage());
-			tr.getTestRequestResponses().put("\nERROR",
-					"Cannot fetch email from :" + e.getLocalizedMessage());
-		}
-
-		return tr;
-	}
-
-	/*
-	 * Fetches a mail with 3DES Cipher Suite!
-	 */
-	public TestResult imapFetch14(TestInput ti) throws IOException {
-		System.setProperty("java.net.preferIPv4Stack", "true");
-		TestResult tr = new TestResult();
-		HashMap<String, String> result = tr.getTestRequestResponses();
-		HashMap<String, String> bodyparts = tr.getAttachments();
-		Properties props = new Properties();
-		props.put("mail.imap.starttls.enable", true);
-		props.put("mail.imap.starttls.required", true);
-		props.put("mail.imap.ssl.ciphersuites",
-				"TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA");
-		props.put("mail.imap.sasl.enable", true);
-		props.put("mail.imap.sasl.mechanisms", "PLAIN");
-		props.put("mail.imap.ssl.trust", "*");
-
-		try {
-			Session session = Session.getDefaultInstance(props, null);
-			Store store = session.getStore("imap");
-			// store.connect(ti.sutSmtpAddress,110,ti.sutUserName,ti.sutPassword);
-			store.connect(ti.sutSmtpAddress, 143, ti.sutUserName,
-					ti.sutPassword);
-
-			IMAPFolder inbox = (IMAPFolder) store.getFolder("Inbox");
-			inbox.open(Folder.READ_WRITE);
-
-			Flags seen = new Flags(Flags.Flag.SEEN);
-			FlagTerm unseenFlagTerm = new FlagTerm(seen, false);
-			Message messages[] = inbox.search(unseenFlagTerm);
-
-
-			for (Message message : messages) {
-				long a = inbox.getUID(message);
-				String strLong = Long.toString(a);
-				Address[] froms = message.getFrom();
-				String sender_ = froms == null ? ""
-						: ((InternetAddress) froms[0]).getAddress();
-
-				// j++;
-				// Store all the headers in a map
-				Enumeration headers = message.getAllHeaders();
-				while (headers.hasMoreElements()) {
-					Header h = (Header) headers.nextElement();
-					// result.put(h.getName() + " " + "[" + j +"]",
-					// h.getValue());
-					result.put("\n" + h.getName(), h.getValue() + "\n");
-
-				}
-
-				// result.put("Delivered-To", "********");
-				result.put("\nUID", strLong);
-				Multipart multipart = (Multipart) message.getContent();
-				for (int i = 0; i < multipart.getCount(); i++) {
-					BodyPart bodyPart = multipart.getBodyPart(i);
-					InputStream stream = bodyPart.getInputStream();
-
-					byte[] targetArray = IOUtils.toByteArray(stream);
-					System.out.println(new String(targetArray));
-					int m = i + 1;
-					bodyparts.put("bodyPart" + " " + "[" + m + "]", new String(
-							targetArray) + "\n");
-
-				}
-				store.close();
-
-			}
-			if (bodyparts.isEmpty()) {
-				tr.setCriteriamet(CriteriaStatus.FALSE);
-				tr.getTestRequestResponses().put("\nERROR",
-						"No messages found. Send a message and try again.");
-			} else {
-				tr.setCriteriamet(CriteriaStatus.TRUE);
-			}
-
-		} catch (MessagingException e) {
-
-			tr.setCriteriamet(CriteriaStatus.FALSE);
-			e.printStackTrace();
-			log.info("Error fetching email " + e.getLocalizedMessage());
-			tr.getTestRequestResponses().put("\nERROR",
-					"Cannot fetch email from :" + e.getLocalizedMessage());
-		}
-
-		return tr;
-	}
+	
 
 	/*
 	 *
@@ -930,12 +797,7 @@ public class TTTReceiverTests {
 	public TestResult imapFetchWrongPass(TestInput ti) throws IOException {
 		System.setProperty("java.net.preferIPv4Stack", "true");
 		TestResult tr = new TestResult();
-		Properties props = new Properties();
-		props.put("mail.imap.sasl.enable", true);
-		props.put("mail.imap.starttls.enable", true);
-		props.put("mail.imap.starttls.required", true);
-		props.put("mail.imap.sasl.mechanisms", "PLAIN");
-		props.put("mail.imap.ssl.trust", "*");
+		Properties props = getImapProps(ti);
 		try {
 			Session session = Session.getDefaultInstance(props, null);
 			Store store = session.getStore("imap");
@@ -2074,11 +1936,8 @@ public class TTTReceiverTests {
 		HashMap<String, String> result = tr.getTestRequestResponses();
 		HashMap<String, String> bodyparts = tr.getAttachments();
 		// int j = 0;
-		Properties props = new Properties();
-		props.put("mail.pop3.starttls.enable", true);
-		props.put("mail.pop3.starttls.required", true);
-		props.put("mail.pop3.ssl.trust", "*");
-
+		Properties props = getPopProps(ti);
+		System.out.println("UseTLS-->"+ti.useTLS);
 		try {
 			Session session = Session.getDefaultInstance(props, null);
 			Store store = session.getStore("pop3");
@@ -2169,12 +2028,7 @@ public class TTTReceiverTests {
 	public TestResult popFetchWrongPass(TestInput ti) throws IOException {
 		System.setProperty("java.net.preferIPv4Stack", "true");
 		TestResult tr = new TestResult();
-		Properties props = new Properties();
-		props.put("mail.imap.sasl.enable", true);
-		props.put("mail.imap.starttls.enable", true);
-		props.put("mail.imap.starttls.required", true);
-		props.put("mail.imap.sasl.mechanisms", "PLAIN");
-		props.put("mail.imap.ssl.trust", "*");
+		Properties props = getPopProps(ti);
 		try {
 			Session session = Session.getDefaultInstance(props, null);
 			Store store = session.getStore("pop3");

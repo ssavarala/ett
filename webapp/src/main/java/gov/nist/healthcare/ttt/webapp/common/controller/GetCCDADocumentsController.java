@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -35,17 +37,35 @@ public class GetCCDADocumentsController {
 	@Value("${server.tomcat.basedir}")
 	String ccdaFileDirectory;
 
+	@Value("${github.test.data}")
+	String githubTestData;
+
+	@Value("${github.sha}")
+	String githubSha;
+
+	@Value("${github.tree}")
+	String githubTree;
+
+	@Value("${github.cures.test.data}")
+	String githubCuresTestData;
+
+	@Value("${github.cures.sha}")
+	String githubCuresSha;
+
+	@Value("${github.cures.tree}")
+	String githubCuresTree;
+	
 	public List<String> files2ignore = Arrays.asList("LICENSE", "README.md","README.MD");
-	public List<String> extension2ignore = Arrays.asList("txt");
+	public List<String> extension2ignore = Arrays.asList("");
 	public String extensionRegex = ".*\\.[a-zA-Z0-9]{3,4}$";
 
 	@RequestMapping(method = RequestMethod.GET, produces = "application/json")
-	public @ResponseBody HashMap<String, Object> getDocuments() throws Exception {
+	public @ResponseBody HashMap<String, Object> getDocuments(@RequestParam(value = "testCaseType") String testCaseType) throws Exception {
 		// Result map
 		HashMap<String, Object> resultMap = new HashMap<>();
 
 		// CCDA cache File path
-		String ccdaFilePath = ccdaFileDirectory + File.separator + "ccda_objectives.txt";
+		String ccdaFilePath = getFilterFiles(testCaseType);
 		File ccdaObjectivesFile = new File(ccdaFilePath);
 
 		if(ccdaObjectivesFile.exists() && !ccdaObjectivesFile.isDirectory()) {
@@ -55,20 +75,35 @@ public class GetCCDADocumentsController {
 
 			resultMap = mapper.readValue(ccdaObjectivesFile, typeRef);
 		} else {
-			String sha = getHTML("https://api.github.com/repos/siteadmin/2015-Certification-C-CDA-Test-Data/branches/master")
-					.getJSONObject("commit").get("sha").toString();
-			JSONArray filesArray = getHTML("https://api.github.com/repos/siteadmin/2015-Certification-C-CDA-Test-Data/git/trees/"
-					+ sha + "?recursive=1").getJSONArray("tree");
+			String sha = getHTML(githubSha).getJSONObject("commit").get("sha").toString();
+			JSONArray filesArray = getHTML(githubTree + sha + "?recursive=1").getJSONArray("tree");
 
 			for(int i=0; i < filesArray.length(); i++) {
 				JSONObject file = filesArray.getJSONObject(i);
 				if(!files2ignore.contains(file.get("path"))) {
 					// Get path array
 					String[] path = file.get("path").toString().split("/");
-					buildJson(resultMap, path);
+					buildJson(resultMap, path,false);
 				}
 
 			}
+			
+			// cures files
+			if (StringUtils.isNotBlank(githubCuresTestData) && githubCuresTestData.length() > 1){
+				sha = getHTML(githubCuresSha).getJSONObject("commit").get("sha").toString();
+				filesArray = getHTML(githubCuresTree + sha + "?recursive=1").getJSONArray("tree");
+				
+				for(int i=0; i < filesArray.length(); i++) {
+					JSONObject file = filesArray.getJSONObject(i);
+					if(!files2ignore.contains(file.get("path"))) {
+						// Get path array
+						String[] path = file.get("path").toString().split("/");
+						buildJson(resultMap, path,true);
+					}
+
+				}				
+			}
+			
 			// Write the cache file
 			try{
 				JSONObject cacheFile = new JSONObject(resultMap);
@@ -81,7 +116,7 @@ public class GetCCDADocumentsController {
 		return resultMap;
 	}
 
-	public void buildJson(HashMap<String, Object> json, String[] path) {
+	public void buildJson(HashMap<String, Object> json, String[] path, boolean curesFiles) {
 		if(path.length == 1 && !files2ignore.contains(path[0].toUpperCase())) {
 			HashMap<String, Object> newObj = new HashMap<>();
 			newObj.put("dirs", new ArrayList<HashMap<String, Object>>());
@@ -97,7 +132,7 @@ public class GetCCDADocumentsController {
 				fileExtn = fileExtnAry[fileExtnAry.length-1];
 		    }
 			//create directory only when at least one valid file exist
-			if(Pattern.matches(extensionRegex, fileName) && !files2ignore.contains(fileName) ) {
+			if(Pattern.matches(extensionRegex, fileName) && !files2ignore.contains(fileName) && !extension2ignore.contains(fileExtn) ) {
 				for(int i = 1 ; i < path.length-1 ; i++) {
 					String  currentName = path[i];
 					boolean firstFile = false;
@@ -107,7 +142,8 @@ public class GetCCDADocumentsController {
 						current = (HashMap<String, Object>) directories.get(getObjByName(directories, currentName));
 						HashMap<String, Object> newFile = new HashMap<>();
 						newFile.put("name", fileName);
-						newFile.put("link", getLink(path));
+						newFile.put("link", getLink(path,curesFiles));
+						newFile.put("cures",curesFiles);
 						List filesList = (List) current.get("files");
 						filesList.add(newFile);
 					} else {
@@ -126,7 +162,8 @@ public class GetCCDADocumentsController {
 						current = (HashMap<String, Object>) directories.get(getObjByName(directories, currentName));
 						HashMap<String, Object> newFile = new HashMap<>();
 						newFile.put("name", fileName);
-						newFile.put("link", getLink(path));
+						newFile.put("link", getLink(path,curesFiles));
+						newFile.put("cures",curesFiles);
 						List filesList = (List) current.get("files");
 						filesList.add(newFile);
 					}
@@ -135,9 +172,14 @@ public class GetCCDADocumentsController {
 		}
 	}
 
-	public String getLink(String[] path) {
+	public String getLink(String[] path,boolean curesFiles) {
 		String link = String.join("/", path).replace(" ", "%20");
-		link = "https://raw.githubusercontent.com/siteadmin/2015-Certification-C-CDA-Test-Data/master/" + link;
+		//link = githubTestData"https://raw.githubusercontent.com/onc-healthit/2015-certification-ccda-testdata/master/" + link;
+		if (curesFiles){
+			link = githubCuresTestData + link;
+		}else{
+			link = githubTestData + link;
+		}
 		return link;
 	}
 
@@ -173,5 +215,14 @@ public class GetCCDADocumentsController {
 		return new JSONObject(result.toString());
 	}
 
+	private String getFilterFiles(String testCaseType){
+		String fileName = ccdaFileDirectory + File.separator + "ccda_objectives.txt";
+		extension2ignore = Arrays.asList("");
+		if (testCaseType !=null && testCaseType.equalsIgnoreCase("xdr")){
+			fileName = ccdaFileDirectory + File.separator + "ccda_objectives_xdr.txt";
+			extension2ignore = Arrays.asList("ZIP","zip");
+		}
+		return fileName;
+	}
 
 }
