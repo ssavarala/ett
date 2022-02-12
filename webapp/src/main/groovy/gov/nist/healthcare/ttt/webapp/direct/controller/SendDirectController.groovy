@@ -9,7 +9,8 @@ import gov.nist.healthcare.ttt.webapp.common.model.ObjectWrapper.ObjWrapper;
 import gov.nist.healthcare.ttt.model.logging.LogModel;
 import gov.nist.healthcare.ttt.model.sendDirect.SendDirectMessage;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger; 
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -30,7 +31,7 @@ import java.security.cert.X509Certificate;
 @RequestMapping("/api/sendDirect")
 public class SendDirectController {
 	
-	private static Logger logger = Logger.getLogger(SendDirectController.class.getName());
+	private static Logger logger = LogManager.getLogger(SendDirectController.class.getName());
 	
 	@Value('${direct.certificates.repository.path}')
 	String certificatesPath
@@ -46,8 +47,9 @@ public class SendDirectController {
 	private DatabaseInstance db;
 
 	@RequestMapping(method = RequestMethod.POST, produces = "application/json")
-	public @ResponseBody ObjWrapper<Boolean> sendDirectMessage(@RequestBody SendDirectMessage messageInfo) throws Exception {
-		
+	public @ResponseBody ObjWrapper<Boolean> sendDirectMessage(@RequestBody SendDirectMessage messageInfo) {
+		try  
+        {  
 		// Set certificates values
 		listener.setCertificatesPath(this.certificatesPath)
 		listener.setCertPassword(this.certPassword)
@@ -61,7 +63,11 @@ public class SendDirectController {
 		if (messageInfo.isValidSendEmail()) {
 			InputStream attachmentFile = null;
 			if(messageInfo.getOwnCcdaAttachment() != null && !messageInfo.getOwnCcdaAttachment().equals("")) {
-				File ownCcda = new File(messageInfo.getOwnCcdaAttachment());
+			    
+				String[] parts = messageInfo.getOwnCcdaAttachment().split("/");
+				String fileName = parts[ parts.length - 1 ]
+				
+				File ownCcda = new File("/tmp/" + fileName);
 				messageInfo.setAttachmentFile(ownCcda.getName());
 				attachmentFile = new FileInputStream(ownCcda);
 			} else if(!messageInfo.getAttachmentFile().equals("")) {
@@ -88,7 +94,11 @@ public class SendDirectController {
 			// Get encryption cert
 			InputStream encryptionCert = null;
 			if(!messageInfo.getEncryptionCert().equals("")) {
-				encryptionCert = new FileInputStream(new File(messageInfo.getEncryptionCert()));
+				
+				String[] parts = messageInfo.getEncryptionCert().split("/");
+				String fileName = parts[ parts.length - 1 ]
+				File ownEncryptionCert = new File("/tmp/" + fileName);
+				encryptionCert = new FileInputStream(ownEncryptionCert);
 			} else {
 				logger.debug("Trying to fetch encryption cert for " + messageInfo.getToAddress());
 				encryptionCert = messageGenerator.getEncryptionCertByDnsLookup(messageInfo.getToAddress());
@@ -111,8 +121,19 @@ public class SendDirectController {
 			return new ObjWrapper<Boolean>(sender.send(25, messageGenerator.getTargetDomain(messageInfo.getToAddress()), msg, messageInfo.getFromAddress(), messageInfo.getToAddress()));
 		}
 		return new ObjWrapper<Boolean>(false);
-	}
+		}
+		
+		
+		catch (FileNotFoundException e){
+		          println(e);
+		        //  throw new Exception("Error: " + "Cannot send message", e);
+		      }
+		catch (Exception e){
+		          println(e);
+		          throw new Exception("Error: " + e.getMessage(), e);
+		      }
 
+	}
 	@RequestMapping(method = RequestMethod.GET, produces = "application/json")
 	public @ResponseBody SendDirectMessage generate() throws IOException {
 

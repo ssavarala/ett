@@ -1,3 +1,71 @@
+==Version 2.3.42#01/31/2022
+	*1. Fixed errata on Lot or Batch Number observation to support ED versus ST
+	
+	*2. https://jira.hl7.org/browse/CDA-1981
+	
+	*3. Add missing SDTC extension sdtc:text and implementation on organizer
+	
+	*4. Add support for IVL_REAL datatype and implementation on organizer
+	
+==Version 2.3.41#12/27/2021
+	*1. Update linked reference mismatched org name message for clarity and specificity
+	
+	*2. Fix recent server configuration issue which may have suppressed certain vocabulary results
+	
+	*3. Add missing CDA Extensions from 2018: sdtc:asPatientRelationship, sdtc:deceasedInd, sdtc:deceasedTime, sdtc:multipleBirthInd, sdtc:multipleBirthOrderNumber, sdtc:statusCode and stdc:desc
+	
+	*4. Limit Vital Sign Observation/value to data type PQ
+	
+	*5. Update value set for Marital Status to include U: Unmarried and C: Common Law
+	
+	*6. Report only one validation issue (versus two issues) for an incorrect or missing Allergy Section Code
+
+==Version 2.3.40#12/06/2021
+	*1. Enforce provenance templateId and extension requirements at a stricter level for content comparisons
+	
+	*2. Fix potential provenance null pointer exception
+	
+	*3. Fix potential security issues in ETT
+	
+==Version 2.3.39#10/25/2021
+	*1. Require provenance identification using templateId for provenance TS validation
+	
+  	*2. Fix configuredExpression totals by severity in production by enabling dynamic vocab
+	
+  	*3. Implement errata CDA-2008 https://jira.hl7.org/browse/CDA-2008 which relaxes NoteActivity/code/translation requirement to a SHOULD vs a SHALL: Consol Note Activity SHALL contain exactly one [1..1] code (3250-16895)/@code="34109-9" Note (CodeSystem: 2.16.840.1.113883.6.1 LOINC) (3250-16940, 3250-16941) code SHOULD contain zero or more [0..*] translation, which SHOULD be selected from ValueSet NoteTypes 2.16.840.1.113883.11.20.9.68 STATIC 20191017
+	
+  	*4. Fix inheritance bug in Medications Section where an error in both entries optional and required is reported, instead of reporting required only
+	
+  	*5. Fix patient name elements for b2 CIRI ambulatory scenario files
+	
+  	*6. Fix parsing bug where Procedures/NoteActivity is mistaken for ProcedureActivityProcedure
+	
+  	*7. Update the following value sets to the latest published version: CVX Vaccines Administered Vaccine Set and Substance Reactant for Intolerance
+	
+  	*8. Add newly available value sets: Transmission Based Precaution Types, Organism, Microbiology and Antimicrobial Susceptibility Tests, and Infectious Disease
+
+==Version 2.3.38.2#10/13/2021
+	*1. Fix potential security issues in ETT
+	
+==Version 2.3.38.1#09/27/2021
+	*1. Fix potential security issues in ETT
+	
+==Version 2.3.38#09/27/2021
+	*1. Relax participant constraints to allow free-text names in Referral Note as part of new MDHT 20210924 Release.
+	
+	*2. Update 170.315(e)(1) Inpatient setting Sample 1 files to include Reason for Referral instructions to enable vendors to create Referral Notes.
+	
+	*3. Update ETT dependencies as per dependabot.
+	
+	*4. Fix potential SQL injection issues in ETT
+	
+==Version 2.3.37#08/30/2021
+	*1. Fix DocumentBuilderFactory XXE vulnerability.
+	
+	*2. Fix exception during parallel execution of DocumentBuilder
+	
+	*3. Update to support HL7 Datatype IVL_REAL as part of new MDHT 20210824 Release
+	
 ==Version 2.3.36#07/26/2021
 	*1. Add linked reference support for Note Activity.
 	

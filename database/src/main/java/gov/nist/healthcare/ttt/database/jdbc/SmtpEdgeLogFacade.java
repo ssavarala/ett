@@ -3,6 +3,8 @@ package gov.nist.healthcare.ttt.database.jdbc;
 import java.io.FileInputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -86,6 +88,7 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
             throw new DatabaseException("Invalid username / profile name combination.");
         }
 
+        PreparedStatement st = null;
         String smtpLogId = UUID.randomUUID().toString();
         StringBuilder sql = new StringBuilder();
         sql.append("INSERT INTO " + SMTPEDGELOG_TABLE + ' ');
@@ -102,38 +105,44 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
         sql.append(SMTPEDGELOG_CRITERIAMET);
         sql.append(", ");
         sql.append(SMTPEDGELOG_TESTREQUESTRESPONSE);
-        sql.append(") VALUES ('");
-        sql.append(smtpLogId);
-        sql.append("' , '");
-        sql.append(profileId);
-        sql.append("' , '");
-        if (smtpLog.getTimestamp() != null) {
-            sql.append(smtpLog.getTimestamp());
-        } else {
-            sql.append(Calendar.getInstance().getTimeInMillis());
-        }
-        sql.append("' ,'");
+        sql.append(") VALUES (");
+        sql.append("? , ? , ? , ? , ?, ? , ? );");
+
+        String stTransactionId = UUID.randomUUID().toString();
         if(smtpLog.getTransaction() != null) {
-            sql.append(smtpLog.getTransaction());
-        } else {
-            sql.append(UUID.randomUUID().toString());
+        	stTransactionId = smtpLog.getTransaction();
         }
-        sql.append("','");
-        sql.append(smtpLog.getTestCaseNumber());
-        sql.append("' , '");
+        String stTestCaseNumber = smtpLog.getTestCaseNumber();
+        String isCriteriaMet = "0";
         if (smtpLog.isCriteriaMet()) {
-            sql.append("1");
-        } else {
-            sql.append("0");
-        }
-        sql.append("' , '");
-        sql.append(smtpLog.getTestRequestsResponse());
-        sql.append("');");
+        	isCriteriaMet = "1";
+        } 
+        String stRequestResponseText = smtpLog.getTestRequestsResponse();
         try {
-            this.getConnection().executeUpdate(sql.toString());
+            Connection con = this.getConnection().getCon();
+       	 	st = con.prepareStatement(sql.toString());
+       	 	st.setString(1, smtpLogId);
+       	 	st.setString(2, profileId);
+            if (smtpLog.getTimestamp() != null) { 
+            	st.setString(3, smtpLog.getTimestamp());
+            }else {
+            	st.setLong(3, Calendar.getInstance().getTimeInMillis());
+            }
+       	 	st.setString(4, stTransactionId);
+       	 	st.setString(5, stTestCaseNumber);
+       	 	st.setString(6, isCriteriaMet);
+       	 	st.setString(7, stRequestResponseText);
+       	 
+       	 	st.executeUpdate();
         } catch (SQLException ex) {
             ex.printStackTrace();
             throw new DatabaseException(ex.getMessage());
+        } finally {
+        	try {
+        		if (st !=null ) st.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
         }
 
         return profileId;
@@ -151,22 +160,37 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
         if(existingProfileID == null || "".equals(existingProfileID))
             return this.addNewSmtpProfile(profile);
         changeSutDataType(); // remove this line of code after DB is updated to new datatype
+        PreparedStatement st = null;
         StringBuilder sql = new StringBuilder();
         sql.append("UPDATE " + SMTPEDGEPROFILE_TABLE + ' ');
         sql.append("SET ");
-        sql.append(SMTPEDGEPROFILE_SUTSMTPADDRESS + " = '" + profile.getSutSMTPAddress() + "', ");
-        sql.append(SMTPEDGEPROFILE_SUTEMAILADDRESS + " = '" + profile.getSutEmailAddress() + "', ");
-        sql.append(SMTPEDGEPROFILE_SUTUSERNAME + " = '" + profile.getSutUsername() + "', ");
-        sql.append(SMTPEDGEPROFILE_SUTPASSWORD + " = AES_ENCRYPT('" + profile.getSutPassword() + "',UNHEX('"+SMTPEDGEPROFILE_ENCRYPTKEY+"') ) ,");
-        sql.append(SMTPEDGEPROFILE_USETLS + " =  "+ profile.getUseTLS() +" ");
-        sql.append("WHERE " + SMTPEDGEPROFILE_SMTPEDGEPROFILEID + " = '" + existingProfileID + "';");
+        sql.append(SMTPEDGEPROFILE_SUTSMTPADDRESS + " = ? , ");
+        sql.append(SMTPEDGEPROFILE_SUTEMAILADDRESS + " = ? , ");
+        sql.append(SMTPEDGEPROFILE_SUTUSERNAME + " = ? , ");
+        sql.append(SMTPEDGEPROFILE_SUTPASSWORD + " = AES_ENCRYPT( ? ,UNHEX( ? ) ) ,");
+        sql.append(SMTPEDGEPROFILE_USETLS + " =  ? ");
+        sql.append("WHERE " + SMTPEDGEPROFILE_SMTPEDGEPROFILEID + " = ? ;");
         //System.out.println("profile.getSutUsername() ..."+profile.getSutUsername());
         //System.out.println("update sql ..."+sql.toString());
         try {
-            this.getConnection().executeUpdate(sql.toString());
+       	 	st = this.getConnection().getCon().prepareStatement(sql.toString());
+       	    st.setString(1, profile.getSutSMTPAddress());
+       	    st.setString(2, profile.getSutEmailAddress());
+       	    st.setString(3, profile.getSutUsername());
+       	    st.setString(4, profile.getSutPassword());
+       	    st.setString(5, SMTPEDGEPROFILE_ENCRYPTKEY);
+       	    st.setBoolean(6, profile.getUseTLS());
+       	    st.setString(7,existingProfileID);
+       	 	st.executeUpdate();
         } catch (SQLException ex) {
             ex.printStackTrace();
             throw new DatabaseException(ex.getMessage());
+        } finally {
+        	try {
+        		if (st !=null ) st.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
         }
         return existingProfileID;
 
@@ -176,6 +200,7 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
     private String addNewSmtpProfile(SmtpEdgeProfileInterface profile) throws DatabaseException {
     	changeSutDataType(); // remove this line of code after DB is updated to new datatype
         String smtpProfileID = UUID.randomUUID().toString();
+        PreparedStatement st = null;
         StringBuilder sql = new StringBuilder();
         sql.append("INSERT INTO " + SMTPEDGEPROFILE_TABLE + ' ');
         sql.append("(" + SMTPEDGEPROFILE_SMTPEDGEPROFILEID);
@@ -193,32 +218,38 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
         sql.append(SMTPEDGEPROFILE_SUTPASSWORD);
         sql.append(", ");
         sql.append(SMTPEDGEPROFILE_USETLS);
-        sql.append(") VALUES ('");
-        sql.append(smtpProfileID);
-        sql.append("' , '");
-        sql.append(profile.getUsername());
-        sql.append("' , '");
-        sql.append(DatabaseConnection.makeSafe(profile.getProfileName()));
-        sql.append("' , '");
-        sql.append(DatabaseConnection.makeSafe(profile.getSutSMTPAddress()));
-        sql.append("' , '");
-        sql.append(DatabaseConnection.makeSafe(profile.getSutEmailAddress()));
-        sql.append("' , '");
-        sql.append(DatabaseConnection.makeSafe(profile.getSutUsername()));
-        sql.append("' , AES_ENCRYPT('");
-        sql.append(profile.getSutPassword());
-        sql.append("',UNHEX('");
-        sql.append(SMTPEDGEPROFILE_ENCRYPTKEY);
-        sql.append("')) , ");
-        sql.append(profile.getUseTLS());
+        sql.append(") VALUES (");
+        sql.append(" ? , ");
+        sql.append(" ? , ");
+        sql.append(" ? , ");
+        sql.append(" ? , ");
+        sql.append(" ? , ");
+        sql.append(" ? , ");
+        sql.append("  AES_ENCRYPT( ? , UNHEX(? )) ," );
+        sql.append(" ?  ");
         sql.append(");");
         try {
-            this.getConnection().executeUpdate(sql.toString());
+       	 	st = this.getConnection().getCon().prepareStatement(sql.toString());
+       	    st.setString(1, smtpProfileID);
+       	    st.setString(2, profile.getUsername());
+       	    st.setString(3, DatabaseConnection.makeSafe(profile.getProfileName()));
+       	    st.setString(4, DatabaseConnection.makeSafe(profile.getSutSMTPAddress()));
+       	    st.setString(5, DatabaseConnection.makeSafe(profile.getSutEmailAddress()));
+       	    st.setString(6, DatabaseConnection.makeSafe(profile.getSutUsername()));
+       	    st.setString(7, profile.getSutPassword());
+       	    st.setString(8, SMTPEDGEPROFILE_ENCRYPTKEY);
+       	    st.setBoolean(9, profile.getUseTLS());
+       	 	st.executeUpdate();            
         } catch (SQLException ex) {
             ex.printStackTrace();
             throw new DatabaseException(ex.getMessage());
+        } finally {
+        	try {
+				if (st !=null ) st.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
         }
-
         return smtpProfileID;
 
     }
@@ -228,14 +259,16 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
         String profileId = this.getProfileId(username, profileName);
         if(profileId == null || "".equals(profileId))
             return 0;
-
+        PreparedStatement st = null;
         StringBuilder sqlRemoveLog = new StringBuilder();
         sqlRemoveLog.append("DELETE ");
         sqlRemoveLog.append("FROM " + SMTPEDGELOG_TABLE + ' ');
-        sqlRemoveLog.append("WHERE " + SMTPEDGEPROFILE_SMTPEDGEPROFILEID + " = '" + profileId + "';");
+        sqlRemoveLog.append("WHERE " + SMTPEDGEPROFILE_SMTPEDGEPROFILEID + " = ? ;");
 
         try {
-            this.getConnection().executeUpdate(sqlRemoveLog.toString());
+       	 	st = this.getConnection().getCon().prepareStatement(sqlRemoveLog.toString());
+       	    st.setString(1, profileId);
+       	 	st.executeUpdate();           
         } catch (SQLException ex) {
             ex.printStackTrace();
             throw new DatabaseException(ex.getMessage());
@@ -244,16 +277,26 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
         StringBuilder sqlRemoveProfile = new StringBuilder();
         sqlRemoveProfile.append("DELETE ");
         sqlRemoveProfile.append("FROM " + SMTPEDGEPROFILE_TABLE + ' ');
-        sqlRemoveProfile.append("WHERE " + USERS_USERNAME + " = '" + username + "' AND ");
-        sqlRemoveProfile.append(SMTPEDGEPROFILE_PROFILENAME + " = '" + profileName + "';");
+        sqlRemoveProfile.append("WHERE " + USERS_USERNAME + " = ? AND ");
+        sqlRemoveProfile.append(SMTPEDGEPROFILE_PROFILENAME + " = ? ;");
 
         int result = 0;
 
         try {
-            result = this.getConnection().executeUpdate(sqlRemoveProfile.toString());
+       	 	st = this.getConnection().getCon().prepareStatement(sqlRemoveProfile.toString());
+       	    st.setString(1, username);
+       	    st.setString(2, profileName);
+       	    result =  st.executeUpdate();              
+            
         } catch (SQLException ex) {
             ex.printStackTrace();
             throw new DatabaseException(ex.getMessage());
+        }finally {
+        	try {
+				if (st !=null ) st.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
         }
 
         return result;
@@ -273,17 +316,22 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
     public SmtpEdgeLogInterface getLatestSmtpEdgeLogInterface(String username, String profileName, String testcasenumber) throws DatabaseException {
         String profileId = this.getProfileId(username, profileName);
         StringBuilder sql = new StringBuilder();
+        PreparedStatement st = null;
         sql.append("SELECT * ");
         sql.append("FROM " + SMTPEDGELOG_TABLE + ' ');
-        sql.append("WHERE " + SMTPEDGEPROFILE_SMTPEDGEPROFILEID + " = '" + profileId + "' AND ");
-        sql.append(SMTPEDGELOG_TESTCASENUMBER + " = '" + DatabaseConnection.makeSafe(testcasenumber) + "' ");
+        sql.append("WHERE " + SMTPEDGEPROFILE_SMTPEDGEPROFILEID + " = " + "?" + " AND ");
+        sql.append(SMTPEDGELOG_TESTCASENUMBER + " = " + "?" + " ");
         sql.append("ORDER BY " + SMTPEDGELOG_TIMESTAMP + " DESC ");
         sql.append("LIMIT 1;");
 
         ResultSet result = null;
         SmtpEdgeLogInterface log = null;
         try {
-            result = this.getConnection().executeQuery(sql.toString());
+        	Connection con = this.getConnection().getCon();
+       	 	st = con.prepareStatement(sql.toString());
+       	 	st.setString(1, profileId);
+       	 	st.setString(2, DatabaseConnection.makeSafe(testcasenumber));
+       	 	result = st.executeQuery();
             if (result.next()) {
                 log = this.convertToLog(result);
             }
@@ -291,6 +339,12 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
         } catch (Exception e) {
             e.printStackTrace();
             throw new DatabaseException(e.getMessage());
+        }finally {
+        	try {
+				if (st !=null ) st.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
         }
         return log;
 
@@ -323,23 +377,32 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
     }
 
     private List<String> getAllTestCaseNumbers(String profileId) throws DatabaseException {
-
+    	PreparedStatement st = null;
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT DISTINCT " + SMTPEDGELOG_TESTCASENUMBER + ' ');
         sql.append("FROM " + SMTPEDGELOG_TABLE + ' ');
-        sql.append("WHERE " + SMTPEDGEPROFILE_SMTPEDGEPROFILEID + " = '" + profileId + "';");
+        sql.append("WHERE " + SMTPEDGEPROFILE_SMTPEDGEPROFILEID + " = " + "?" + ";");
 
         ResultSet result = null;
         List<String> testCaseNumbers = new ArrayList<String>();
 
         try {
-            result = this.getConnection().executeQuery(sql.toString());
+        	Connection con = this.getConnection().getCon();
+       	 	st = con.prepareStatement(sql.toString());
+       	 	st.setString(1, profileId);
+       	 	result = st.executeQuery();
             while (result.next()) {
                 testCaseNumbers.add(result.getString(SMTPEDGELOG_TESTCASENUMBER));
             }
         } catch (Exception e) {
             e.printStackTrace();
             throw new DatabaseException(e.getMessage());
+        }finally {
+        	try {
+				if (st !=null ) st.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
         }
         return testCaseNumbers;
     }
@@ -365,12 +428,13 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
     }
 
     private String getLatestInteractionIDByProfileAndTestCase(String profileId, String testCaseNumber) throws DatabaseException {
-
+    	
+    	PreparedStatement st = null;
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT " + SMTPEDGELOG_TRANSACTIONID + ' ');
         sql.append("FROM " + SMTPEDGELOG_TABLE + ' ');
-        sql.append("WHERE " + SMTPEDGEPROFILE_SMTPEDGEPROFILEID + " = '" + profileId + "' AND ");
-        sql.append(SMTPEDGELOG_TESTCASENUMBER + " = '" + testCaseNumber + "' ");
+        sql.append("WHERE " + SMTPEDGEPROFILE_SMTPEDGEPROFILEID + " = " + "?" + " AND ");
+        sql.append(SMTPEDGELOG_TESTCASENUMBER + " = " + "?" + " ");
         sql.append("ORDER BY " + SMTPEDGELOG_TIMESTAMP + " DESC ");
         sql.append("LIMIT 1;");
         //System.out.println(sql.toString());
@@ -378,29 +442,42 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
         String interactionID = null;
 
         try {
-            result = this.getConnection().executeQuery(sql.toString());
+        	Connection con = this.getConnection().getCon();
+       	 	st = con.prepareStatement(sql.toString());
+       	 	st.setString(1, profileId);
+       	 	st.setString(2, testCaseNumber);
+       	 	result = st.executeQuery();
             if (result.next()) {
                 interactionID = result.getString(SMTPEDGELOG_TRANSACTIONID);
             }
         }  catch (Exception e) {
             e.printStackTrace();
             throw new DatabaseException(e.getMessage());
+        }finally {
+        	try {
+				if (st !=null ) st.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
         }
         return interactionID;
     }
 
     private List<SmtpEdgeLogInterface> getLogsByInteraction(String interactionID) throws DatabaseException {
-
+    	PreparedStatement st = null;
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT * ");
         sql.append("FROM " + SMTPEDGELOG_TABLE + ' ');
-        sql.append("WHERE " + SMTPEDGELOG_TRANSACTIONID + " = '" + interactionID + "';" );
+        sql.append("WHERE " + SMTPEDGELOG_TRANSACTIONID + " = " + "?" + ";");
 
         ResultSet result = null;
         List<SmtpEdgeLogInterface> logs = new ArrayList<SmtpEdgeLogInterface>();
 
         try {
-            result = this.getConnection().executeQuery(sql.toString());
+        	Connection con = this.getConnection().getCon();
+       	 	st = con.prepareStatement(sql.toString());
+       	 	st.setString(1, interactionID);
+       	 	result = st.executeQuery();
             while (result.next()) {
                 SmtpEdgeLogInterface log = this.convertToLog(result);
                 logs.add(log);
@@ -408,24 +485,33 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
         }  catch (Exception e) {
             e.printStackTrace();
             throw new DatabaseException(e.getMessage());
+        }finally {
+        	try {
+				if (st !=null ) st.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
         }
         return logs;
     }
 
 
     private String getProfileId(String username, String profileName) throws DatabaseException {
-
+    	PreparedStatement st = null;
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT " + SMTPEDGEPROFILE_SMTPEDGEPROFILEID + ' ');
         sql.append("FROM " + SMTPEDGEPROFILE_TABLE + ' ');
-        sql.append("WHERE " + USERS_USERNAME + " = '" + DatabaseConnection.makeSafe(username) + "' AND ");
-        sql.append(SMTPEDGEPROFILE_PROFILENAME + " = '" + DatabaseConnection.makeSafe(profileName) + "';");
+        sql.append("WHERE " + USERS_USERNAME + " = ? AND ");
+        sql.append(SMTPEDGEPROFILE_PROFILENAME + " = ? ;");
 
         ResultSet result = null;
         String profileID = null;
 
         try {
-            result = this.getConnection().executeQuery(sql.toString());
+       	 	st = this.getConnection().getCon().prepareStatement(sql.toString());
+       	    st.setString(1, DatabaseConnection.makeSafe(username));
+       	    st.setString(2, DatabaseConnection.makeSafe(profileName));
+       	    result =  st.executeQuery();             
             if (result.next()) {
                 profileID = result.getString(SMTPEDGEPROFILE_SMTPEDGEPROFILEID);
 
@@ -434,6 +520,12 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
         } catch (Exception e) {
             e.printStackTrace();
             throw new DatabaseException(e.getMessage());
+        }finally {
+        	try {
+				if (st !=null ) st.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
         }
 
         return profileID;
@@ -448,7 +540,7 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
      * @throws DatabaseException
      */
     public List<SmtpEdgeProfileInterface> getAllProfilesByUsername(String username) throws DatabaseException {
-
+    	PreparedStatement st = null;
         StringBuilder sql = new StringBuilder();
 
         sql.append("SELECT  ");
@@ -479,12 +571,15 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
         sql.append("')) AS CHAR(255))) ");
         sql.append(SMTPEDGEPROFILE_SUTPASSWORD);
         sql.append(" FROM " + SMTPEDGEPROFILE_TABLE + ' ');
-        sql.append("WHERE " + USERS_USERNAME + " = '" + username + "';");
+        sql.append("WHERE " + USERS_USERNAME + " = " + "?" + ";");
 
         ResultSet result = null;
         List<SmtpEdgeProfileInterface> profiles = new ArrayList<SmtpEdgeProfileInterface>();
         try {
-            result = this.getConnection().executeQuery(sql.toString());
+        	Connection con = this.getConnection().getCon();
+       	 	st = con.prepareStatement(sql.toString());
+       	 	st.setString(1, username);
+       	 	result = st.executeQuery();
             while (result.next()) {
                 SmtpEdgeProfileInterface profile = this.convertToProfile(result);
                 profiles.add(profile);
@@ -494,7 +589,13 @@ public class SmtpEdgeLogFacade extends DatabaseFacade {
             e.printStackTrace();
             throw new DatabaseException(e.getMessage());
         }
-
+        finally {
+        	try {
+				if (st !=null ) st.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+        }
         return profiles;
 
     }

@@ -1,6 +1,8 @@
 package gov.nist.healthcare.ttt.webapp.common.controller;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 
 import org.apache.http.HttpEntity;
@@ -12,7 +14,8 @@ import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger; 
+import org.apache.logging.log4j.LogManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,11 +30,11 @@ import gov.nist.healthcare.ttt.webapp.common.model.exceptionJSON.TTTCustomExcept
 @Controller
 @RequestMapping("/api/ccdar2")
 public class CCDAR2ValidatorController {
-	
+	String tDir = System.getProperty("java.io.tmpdir");
 	@Value("${ett.mdht.r2.url}")
 	String mdhtUrl;
 	
-	private static Logger logger = Logger.getLogger(CCDAR2ValidatorController.class.getName());
+	private static Logger logger = LogManager.getLogger(CCDAR2ValidatorController.class.getName());
 
 	@RequestMapping(method = RequestMethod.POST, produces = "application/json")
 	public @ResponseBody String validateCCDAR2(@RequestBody HashMap<String, String> filePath) throws Exception {
@@ -52,7 +55,13 @@ public class CCDAR2ValidatorController {
 				
 				// Query MDHT war endpoint
 				CloseableHttpClient client = HttpClients.createDefault();
-				File file = new File(messageFilePath);
+	    		Path path  = Paths.get(messageFilePath);
+	    		Path normalizedPath =  path.normalize();
+				String fileName = normalizedPath.toString();
+				File file = new File(fileName);
+				if(!file.exists() || fileName.startsWith("../") || !fileName.startsWith(tDir + File.separator)) {
+					throw new TTTCustomException("0x0050", "Action not supported by API.");
+				}
 				HttpPost post = new HttpPost(mdhtUrl);
 				FileBody fileBody = new FileBody(file);
 				//
