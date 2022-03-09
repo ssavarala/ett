@@ -47,7 +47,7 @@ jobs:
       with:
         host: 52.55.22.102
         username: sandeep.saravala
-        port: ${{ secrets.PORT }}
+        port: 22
         key: ${{ secrets.KEY }}
         passphrase: ${{secrets.PASSPHRASE }}
         source: "staging/webapp-0.0.1-SNAPSHOT.jar"
