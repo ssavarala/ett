@@ -1,3 +1,89 @@
+==Version 2.3.57#07/31/2023
+	*1. C-CDA: Soft-deploy Keycloak for C-CDA Scorecard API access
+
+	*2. ETT: Update JSON and File Upload dependencies
+
+	*3. ETT: Fix XDM Validator not displaying Pass/Fail Status
+
+	*4. ETT: Remove direct link to announcement page
+	
+	*5. ETT: Correct home phone value in 170.315_b9_CP_Amb scenario file
+
+	*6. FHIR: Address Google Groups issue, "FHIR server returns 500 on querying example url" via update to 404 as per hl7 documentation and update to links
+
+	*7. General: Infrastructure updates
+
+==Version 2.3.56#06/26/2023
+	*1. C-CDA: Soft-deploy Keycloak for Reference C-CDA Validator Service API access. Full authentication required by July 10, 2023. Please see the thread, "API Key Authorization (Reference C-CDA Validator API/Scorecard API)" on ETT Google Groups for more information
+
+	*2. Fix Google Group issue, "SVAP Message Validator - Goal LOINC"
+
+	*3. C-CDA: Fix Google Group issue, "routeCode translation displays as not an active code"
+
+	*4. ETT: Remove announcement page from UI
+	
+	*5. ETT: Fix JSONObject Text error for ETT C-CDA Validator
+
+	*6. ETT: Fix error message for ETT C-CDA Validator if RefVal service is down
+
+	*7. ETT: Update error message for excessively large files for ETT C-CDA Validator
+
+	*8. General: Infrastructure updates
+
+==Version 2.3.55#05/08/2023
+	*1. C-CDA: Update Test Data scenario files to ensure SVAP 2022 USCDI v2 criteria is being applied properly for Inpatient scenarios
+	
+	*2. Correct Gender Identity Extension in scenario files.
+	
+	*3. Fix incorrect code system OID in scenario files.
+	
+	*4. Update EffectiveTime checking in PlannedProcedure to allow specification of high value even if not present in scenario
+	
+	*5. Fix XDR Submit scenarios to send Negative Testing files
+	
+	*6. Remove erroneous procedures from scenario files
+	
+	*7. Remove Discharge Disposition codes from Ambulatory samples
+	
+==Version 2.3.54#04/24/2023
+	*1. C-CDA: Further improve memory handling to address recent downtime issues
+	
+	*2. C-CDA: Change §170.315(b)(2)(iv) language in test data to clarify that the output file is to be in a CCD format. Update: "The SUT should then generate a C-CDA (using the CCD template in C-CDA Release 2.1) that contains the Allergies, Medications and Problems from the two Referral Notes that were provided.
+	
+	*3. General: Implement security updates in infrastructure
+==Version 2.3.53#03/27/2023
+	*1. C-CDA: Resolve ETT Google Groups thread, "Vocabulary Errors for birthplace address"
+	
+	*2. C-CDA: Improve memory handling
+	
+	*3. ETT: Remove SVAP 2022 DCDT from Cert Discovery drop down
+
+	*4. ETT: Remove broken links in 2015 Direct Certificate Discovery Tool page
+
+	*5. General: Infrastructure updates
+==Version 2.3.52#02/27/2023
+	*1. C-CDA: Update SubstanceReactantForIntolerance value set to include the latest codes from VSAC
+	
+	*2. Direct: Fix drop downs not loading for "Select a Discovery Test Case"
+	
+	*3. Direct: For Direct: 4.0, add ability to send a direct message using a certificate that does not have a CRL
+	
+	*4. General: Infrastructure updates
+
+==Version 2.3.51#01/09/2023	
+	*1. Add Direct version 1.3
+	
+	*2. Add SVAP 2022 DCDT
+	
+==Version 2.3.50#12/05/2022	
+	*1. Add table explanation to the ETT validator home which relates certification criteria version with C-CDA and USCDI version: https://ett.healthit.gov/ett/#/validators
+	
+	*2. FHIR - R4 dependency update for bulk R4
+	
+	*3. Various Direct and other server infrastructure upgrades and fixes
+	
+	*4. Fix ETT GG issue, "XDR Endpoint with TLS not working"
+	
 ==Version 2.3.49#09/29/2022	
 	*1. Correct template versions for Problem Status and Allergy Status to 2019-06-20
 	

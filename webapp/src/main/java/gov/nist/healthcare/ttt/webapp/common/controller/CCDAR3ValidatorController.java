@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -61,9 +62,21 @@ public class CCDAR3ValidatorController {
 	    		Path normalizedPath =  path.normalize();				
 				String fileName = normalizedPath.toString();
 				File file = new File(fileName);
+				if(!TempUploadController.hasFileSize()) {
+					throw new TTTCustomException("0x0082", "Unknown file size");
+				}
+				if(TempUploadController.isValidFileSize()) {
+					throw new TTTCustomException("0x0070", "Attached files cannot be larger than 1MB");
+				}
 				if(!file.exists() || fileName.startsWith("../") || !fileName.startsWith(tDir + File.separator)) {
 					throw new TTTCustomException("0x0050", "Action not supported by API.");
-				}								
+				}
+				GenerateAccessToken generateAccessToken = new GenerateAccessToken();
+				String accessToken = generateAccessToken.getAccessToken();;
+
+				if (StringUtils.isBlank(accessToken)){
+					throw new  TTTCustomException("0x0090", "Unauthorized to access CCDA API.");
+				}
 				HttpPost post = new HttpPost(mdhtUrl);
 				FileBody fileBody = new FileBody(file);
 				//
@@ -76,9 +89,13 @@ public class CCDAR3ValidatorController {
 				HttpEntity entity = builder.build();
 				//
 				post.setEntity(entity);
+				post.addHeader("Authorization", "Bearer "+accessToken);
 				String result = "";
+				int statusCode;
 				try {
 					HttpResponse response = client.execute(post);
+					
+					statusCode = response.getStatusLine().getStatusCode();
 					// CONVERT RESPONSE TO STRING
 					result = EntityUtils.toString(response.getEntity());
 				} catch(Exception e) {
@@ -86,6 +103,10 @@ public class CCDAR3ValidatorController {
 					throw e;
 				}
 
+				//logger.info("Result: "+ result);
+				if(statusCode == 404) {
+					throw new TTTCustomException("0x0065", "There was a problem reaching the API. Please try again later.");
+				}
 				JSONObject json = new JSONObject(result);
 				json.put("hasError", false);
 				// Check errors
