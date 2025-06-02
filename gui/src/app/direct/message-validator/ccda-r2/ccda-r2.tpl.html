@@ -67,9 +67,11 @@
 							<div class="btn-group">
 								<!--<a class="btn btn-default" ng-repeat="(docType, value) in ccdaDocuments" ng-class="{active: sutRole === docType}" ng-click="switchDocType(docType)">{{docType ==="Sender SUT Test Data" ? 'Sender' : 'Receiver' }}</a>
 								-->
-								<a class="btn btn-default" ng-class="{'sender': 'active'}[sutRole]" ng-click="switchDocType('Sender SUT Test Data')">Sender</a>
-								<a class="btn btn-default" ng-class="{'receiver': 'active'}[sutRole]" ng-click="switchDocType('Receiver SUT Test Data')">Receiver</a>
+								<div class="btn-group">
+							    <a class="btn btn-default" ng-class="{active: sutRole === 'Sender SUT Test Data'}" ng-click="switchDocType('Sender SUT Test Data')">Sender</a>
+							    <a class="btn btn-default" ng-class="{active: sutRole === 'Receiver SUT Test Data'}" ng-click="switchDocType('Receiver SUT Test Data')">Receiver</a>
 							</div>
+
 						</div>
 						<div ng-show="false">
 							<div>
@@ -174,7 +176,7 @@
 					</ui-select>
 			</div>
 			<div>
-					<a ng-href="{{ccdaDocument.link}}" target="_self" class="btn btn-primary" download="{{ccdaDocument.name}}" ng-disabled="!ccdaDocument.path">
+					<a ng-href="{{ccdaDocument.download_url}}" target="_blank" class="btn btn-primary" download="{{ccdaDocument.name}}" ng-disabled="!ccdaDocument.path">
 						<span>Download</span>
 					</a>
 					<a ng-href="{{properties.githubZip}}" target="_blank" class="btn btn-primary">

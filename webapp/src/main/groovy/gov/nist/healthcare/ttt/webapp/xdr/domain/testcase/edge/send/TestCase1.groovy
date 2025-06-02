@@ -24,6 +24,7 @@ import gov.nist.healthcare.ttt.parsing.Parsing;
 import gov.nist.healthcare.ttt.parsing.SOAPWithAttachment;
 import gov.nist.healthcare.ttt.parsing.Parsing.MetadataLevel
 import gov.nist.healthcare.ttt.webapp.common.model.exceptionJSON.TTTCustomException
+import gov.nist.healthcare.ttt.webapp.common.controller.GenerateAccessToken
 import gov.nist.healthcare.ttt.webapp.xdr.core.TestCaseExecutor
 import gov.nist.healthcare.ttt.webapp.xdr.domain.testcase.Content
 import gov.nist.healthcare.ttt.webapp.xdr.domain.testcase.Result
@@ -153,6 +154,9 @@ final class TestCase1 extends TestCaseSender {
 			post = new HttpPost(this.mdhtSvapEndpoint);
 		}
 		
+		GenerateAccessToken generateAccessToken = new GenerateAccessToken();
+                String accessToken = generateAccessToken.getAccessToken();
+		
 		ContentBody fileBody = new InputStreamBody(new ByteArrayInputStream(ccdaFile), "ccda");
 //		FileBody fileBody = new FileBody(ccdaFile);
 		//
@@ -166,6 +170,7 @@ final class TestCase1 extends TestCaseSender {
 		HttpEntity entity = builder.build();
 		//
 		post.setEntity(entity);
+		post.addHeader("Authorization", "Bearer " + accessToken);
 		String result = "";
 		try {
 			HttpResponse response = client.execute(post);
